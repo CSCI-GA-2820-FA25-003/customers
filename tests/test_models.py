@@ -10,6 +10,7 @@ Test cases for Customers Model
 # pylint: disable=duplicate-code
 import os
 import time
+import uuid
 import logging
 from datetime import datetime
 from unittest import TestCase
@@ -100,7 +101,7 @@ class TestCustomersModel(TestCaseBase):
         c.create()
         old_updated_at = c.updated_at
         c.address = "99 Updated Road"
-        time.sleep(0.01)  # ensure timestamp difference
+        time.sleep(0.01)
         c.update()
         self.assertEqual(Customers.find(c.id).address, "99 Updated Road")
         self.assertGreaterEqual(c.updated_at, old_updated_at)
@@ -190,6 +191,49 @@ class TestCustomersModel(TestCaseBase):
         for row in found:
             self.assertEqual(row.last_name, target)
 
+    def test_find_by_first_name(self):
+        """It should Find Customers by first_name"""
+        people = CustomersFactory.create_batch(6)
+        for p in people:
+            p.create()
+        target = people[0].first_name
+        rows = Customers.find_by_first_name(target)
+        for r in rows:
+            self.assertEqual(r.first_name, target)
+
+    def test_find_by_name(self):
+        """It should Find Customers by name using first or last token"""
+        # Create two customers that can be matched by either first or last token
+        c1 = Customers(first_name="Alice", last_name="Smith", address="1 Ave")
+        c2 = Customers(first_name="Bob", last_name="Jones", address="2 Ave")
+        c1.create()
+        c2.create()
+        rows = Customers.find_by_name("Alice Jones")
+        names = {(r.first_name, r.last_name) for r in rows}
+        self.assertIn(("Alice", "Smith"), names)
+        self.assertIn(("Bob", "Jones"), names)
+
+    def test_find_not_found_returns_none(self):
+        """It should return None when id is not found"""
+        self.assertIsNone(Customers.find(uuid.uuid4()))
+
+    def test_repr_contains_names(self):
+        """__repr__ should include first and last names"""
+        c = Customers(first_name="Jane", last_name="Doe", address="1 Ave")
+        text = repr(c)
+        self.assertIn("Jane", text)
+        self.assertIn("Doe", text)
+
+    def test_deserialize_trims_whitespace(self):
+        """deserialize should strip whitespace from fields"""
+        c = Customers()
+        c.deserialize(
+            {"first_name": "  Jane  ", "last_name": "  Doe ", "address": "  1 Ave  "}
+        )
+        self.assertEqual(c.first_name, "Jane")
+        self.assertEqual(c.last_name, "Doe")
+        self.assertEqual(c.address, "1 Ave")
+
 
 ######################################################################
 #  T E S T   E X C E P T I O N   H A N D L E R S
@@ -219,3 +263,70 @@ class TestExceptionHandlers(TestCaseBase):
         with patch("service.models.db.session.commit") as commit_mock:
             commit_mock.side_effect = Exception()
             self.assertRaises(DataValidationError, c.delete)
+
+
+######################################################################
+#  A P P   E R R O R   H A N D L E R S   &   W I R I N G
+######################################################################
+def _status_code(result):
+    """Extract status code from handler return (tuple or Response)."""
+    if isinstance(result, tuple):
+        if len(result) >= 2:
+            status = result[1]
+            try:
+                return int(status)
+            except Exception:
+                return int(getattr(status, "value", 0))
+        return None
+    return getattr(result, "status_code", None)
+
+
+class TestAppErrorHandlers(TestCaseBase):
+    """Directly exercise common error handlers and app wiring"""
+
+    def test_error_handlers_status_codes(self):
+        from service.common import error_handlers as eh
+
+        self.assertEqual(_status_code(eh.bad_request(Exception("bad"))), 400)
+        self.assertEqual(_status_code(eh.not_found(Exception("missing"))), 404)
+        self.assertEqual(
+            _status_code(eh.method_not_supported(Exception("method"))), 405
+        )
+        self.assertEqual(
+            _status_code(eh.mediatype_not_supported(Exception("type"))), 415
+        )
+        self.assertEqual(_status_code(eh.internal_server_error(Exception("boom"))), 500)
+
+    def test_request_validation_error_wrapper(self):
+        from service.common import error_handlers as eh
+
+        status = _status_code(
+            eh.request_validation_error(DataValidationError("invalid"))
+        )
+        self.assertEqual(status, 400)
+
+    def test_routes_index(self):
+        client = app.test_client()
+        resp = client.get("/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b"Reminder", resp.data)
+
+    def test_cli_db_create_runs(self):
+        # invoke the Flask CLI command instead of calling the click.Command directly
+        runner = app.test_cli_runner()
+        result = runner.invoke(args=["db-create"])
+        self.assertEqual(result.exit_code, 0)
+
+        # sanity check: table exists and we can insert after recreation
+        with app.app_context():
+            Customers(first_name="X", last_name="Y", address="Z").create()
+            self.assertEqual(len(Customers.all()), 1)
+
+    def test_log_handlers_init_logging(self):
+        from service.common.log_handlers import init_logging
+
+        gunicorn_logger = logging.getLogger("gunicorn.error")
+        if not gunicorn_logger.handlers:
+            gunicorn_logger.addHandler(logging.StreamHandler())
+        init_logging(app, "gunicorn.error")
+        self.assertTrue(len(app.logger.handlers) >= 1)
