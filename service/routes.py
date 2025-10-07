@@ -37,6 +37,42 @@ def index():
         "Reminder: return some useful information in json format about the service here",
         status.HTTP_200_OK,
     )
+######################################################################
+# CREATE A CUSTOMER
+######################################################################
+@app.route("/customers", methods=["POST"])
+def create_customer():
+    """
+    Creates a new customer record based on JSON body input.
+    Expected fields:
+        - first_name
+        - last_name
+        - email
+        - address
+        - password
+    """
+    app.logger.info("Request to create a new customer")
+
+    data = request.get_json()
+    required_fields = ["first_name", "last_name", "email", "address", "password"]
+
+    # Check for missing fields
+    for field in required_fields:
+        if field not in data or not data[field]:
+            abort(400, description=f"Missing or empty field: {field}")
+
+    # Example of a mock customer record (no real DB yet)
+    customer = {
+        "id": 1,
+        "first_name": data["first_name"],
+        "last_name": data["last_name"],
+        "email": data["email"],
+        "address": data["address"],
+        "created_at": "2025-10-07T00:00:00Z",
+    }
+
+    return jsonify(customer), status.HTTP_201_CREATED
+
 
 
 ######################################################################
