@@ -202,16 +202,43 @@ class TestCustomersModel(TestCaseBase):
             self.assertEqual(r.first_name, target)
 
     def test_find_by_name(self):
-        """It should Find Customers by name using first or last token"""
-        # Create two customers that can be matched by either first or last token
+        """It should handle single, full, and multi-part name queries correctly"""
+        # Create test data
         c1 = Customers(first_name="Alice", last_name="Smith", address="1 Ave")
         c2 = Customers(first_name="Bob", last_name="Jones", address="2 Ave")
+        c3 = Customers(first_name="Alice", last_name="Johnson", address="3 Ave")
         c1.create()
         c2.create()
-        rows = Customers.find_by_name("Alice Jones")
-        names = {(r.first_name, r.last_name) for r in rows}
+        c3.create()
+
+        # --- Case 1: single token ---
+        # Should match either first or last name
+        results = Customers.find_by_name("Alice")
+        names = {(r.first_name, r.last_name) for r in results}
         self.assertIn(("Alice", "Smith"), names)
+        self.assertIn(("Alice", "Johnson"), names)
+        self.assertNotIn(("Bob", "Jones"), names)
+
+        results = Customers.find_by_name("Jones")
+        names = {(r.first_name, r.last_name) for r in results}
         self.assertIn(("Bob", "Jones"), names)
+        self.assertNotIn(("Alice", "Smith"), names)
+
+        # --- Case 2: full name (exact First Last) ---
+        results = Customers.find_by_name("Alice Smith")
+        names = {(r.first_name, r.last_name) for r in results}
+        self.assertEqual(len(names), 1)
+        self.assertIn(("Alice", "Smith"), names)
+
+        # --- Case 3: more than two tokens (ignore middle) ---
+        results = Customers.find_by_name("Alice B Smith")
+        names = {(r.first_name, r.last_name) for r in results}
+        self.assertEqual(len(names), 1)
+        self.assertIn(("Alice", "Smith"), names)
+
+        # --- Case 4: empty or invalid input ---
+        results = Customers.find_by_name("")
+        self.assertEqual(results.count(), 0)
 
     def test_find_not_found_returns_none(self):
         """It should return None when id is not found"""

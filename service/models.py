@@ -200,9 +200,33 @@ class Customers(db.Model):
 
     @classmethod
     def find_by_name(cls, name: str):
-        """Returns all customers that match a name"""
+        """Find customers by name.
+        Cases handled:
+        1. Single token -> delegate to find_by_first_name or find_by_last_name
+        2. Two tokens (First Last) -> exact match
+        3. More than two tokens -> match first and last (ignore middle names)
+        """
         logger.info("Processing name query for %s ...", name)
-        return cls.query.filter(
-            (cls.first_name == name.split(" ")[0])
-            | (cls.last_name == name.split(" ")[1])
-        )
+        parts = name.strip().split()
+
+        if not parts:
+            # Empty input, return empty result
+            return cls.query.filter(cls.id is None)
+
+        # Case 1: Only one name provided
+        if len(parts) == 1:
+            token = parts[0]
+            # Combine both possibilities
+            return cls.query.filter(
+                (cls.first_name == token) | (cls.last_name == token)
+            )
+
+        # Case 2: Exactly two parts -> First Last
+        elif len(parts) == 2:
+            first, last = parts
+            return cls.query.filter(cls.first_name == first, cls.last_name == last)
+
+        # Case 3: More than two -> take first and last (ignore middle)
+        else:
+            first, last = parts[0], parts[-1]
+            return cls.query.filter(cls.first_name == first, cls.last_name == last)
