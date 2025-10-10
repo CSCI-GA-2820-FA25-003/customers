@@ -32,6 +32,7 @@ DATABASE_URI = os.getenv(
 )
 BASE_URL = "/customers"
 
+
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
@@ -73,8 +74,6 @@ class TestCustomersService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # Todo: Add your test cases here...
-
     def test_update_customers(self):
         """It should Update an existing Customers"""
         # create a customers to update
@@ -92,7 +91,9 @@ class TestCustomersService(TestCase):
         # check that first name was updated
         new_customers_fn = new_customers.copy()
         new_customers_fn["first_name"] = "unknown"
-        response = self.client.put(f"{BASE_URL}/{new_customers_fn['id']}", json=new_customers_fn)
+        response = self.client.put(
+            f"{BASE_URL}/{new_customers_fn['id']}", json=new_customers_fn
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         updated_customers = response.get_json()
         self.assertEqual(updated_customers["first_name"], "unknown")
@@ -102,7 +103,9 @@ class TestCustomersService(TestCase):
         # check that last name was updated
         new_customers_ln = new_customers.copy()
         new_customers_ln["last_name"] = "unknown"
-        response = self.client.put(f"{BASE_URL}/{new_customers_ln['id']}", json=new_customers_ln)
+        response = self.client.put(
+            f"{BASE_URL}/{new_customers_ln['id']}", json=new_customers_ln
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         updated_customers = response.get_json()
         self.assertEqual(updated_customers["last_name"], "unknown")
@@ -112,13 +115,15 @@ class TestCustomersService(TestCase):
         # check that address was updated
         new_customers_addr = new_customers.copy()
         new_customers_addr["address"] = "unknown"
-        response = self.client.put(f"{BASE_URL}/{new_customers_addr['id']}", json=new_customers_addr)
+        response = self.client.put(
+            f"{BASE_URL}/{new_customers_addr['id']}", json=new_customers_addr
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         updated_customers = response.get_json()
         self.assertEqual(updated_customers["address"], "unknown")
         self.assertEqual(updated_customers["first_name"], new_customers["first_name"])
         self.assertEqual(updated_customers["last_name"], new_customers["last_name"])
-    
+
     def test_update_customers_not_found(self):
         """It should not Update a Customers that is not found"""
         # create a customers to update
@@ -143,30 +148,42 @@ class TestCustomersService(TestCase):
         # check when first name was updated to empty returns bad request
         new_customers_fn = new_customers.copy()
         new_customers_fn["first_name"] = ""
-        response = self.client.put(f"{BASE_URL}/{new_customers_fn['id']}", json=new_customers_fn)
+        response = self.client.put(
+            f"{BASE_URL}/{new_customers_fn['id']}", json=new_customers_fn
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # check when last name was updated to empty returns bad request
         new_customers_ln = new_customers.copy()
         new_customers_ln["last_name"] = ""
-        response = self.client.put(f"{BASE_URL}/{new_customers_ln['id']}", json=new_customers_ln)
+        response = self.client.put(
+            f"{BASE_URL}/{new_customers_ln['id']}", json=new_customers_ln
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # check when address was updated to empty returns bad request
         new_customers_addr = new_customers.copy()
         new_customers_addr["address"] = ""
-        response = self.client.put(f"{BASE_URL}/{new_customers_addr['id']}", json=new_customers_addr)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST) 
+        response = self.client.put(
+            f"{BASE_URL}/{new_customers_addr['id']}", json=new_customers_addr
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # check when empty body returns bad request
         response = self.client.put(f"{BASE_URL}/{new_customers['id']}", json={})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # check when body with invalid attributes returns bad request
+        response = self.client.put(
+            f"{BASE_URL}/{new_customers['id']}", json={"foo": "bar"}
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_update_customer_no_content_type(self):
         """It should return 415 for a missing Content-Type header"""
         test_customer = CustomersFactory()
         test_customer.create()
-    
+
         response = self.client.put(
             f"{BASE_URL}/{test_customer.id}",
             # No content_type specified
@@ -177,10 +194,10 @@ class TestCustomersService(TestCase):
         """It should return 415 for an unsupported media type"""
         test_customer = CustomersFactory()
         test_customer.create()
-    
+
         response = self.client.put(
             f"{BASE_URL}/{test_customer.id}",
             data="hello world",
-            content_type="text/plain"  # Not JSON
+            content_type="text/plain",  # Not JSON
         )
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)

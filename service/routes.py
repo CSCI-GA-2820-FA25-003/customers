@@ -43,7 +43,6 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-# Todo: Place your REST API code here ...
 
 @app.route("/customers/<uuid:customers_id>", methods=["PUT"])
 def update_customers(customers_id):
@@ -58,12 +57,15 @@ def update_customers(customers_id):
     # Attempt to find the Customers and abort if not found
     customers = Customers.find(customers_id)
     if not customers:
-        abort(status.HTTP_404_NOT_FOUND, f"Customers with id '{customers_id}' was not found.")
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Customers with id '{customers_id}' was not found.",
+        )
 
     # Update the Customers with the new data
     data = request.get_json()
     app.logger.info("Processing: %s", data)
-    try:    
+    try:
         customers.deserialize(data)
     except DataValidationError as e:
         abort(status.HTTP_400_BAD_REQUEST, f"{e}")
