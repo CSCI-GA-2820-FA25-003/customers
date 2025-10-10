@@ -395,7 +395,7 @@ class TestAppErrorHandlers(TestCaseBase):
         client = app.test_client()
         resp = client.get("/")
         self.assertEqual(resp.status_code, 200)
-        self.assertIn(b"Reminder", resp.data)
+        self.assertIn(b"Customers Demo REST API Service", resp.data)
 
     def test_cli_db_create_runs(self):
         # invoke the Flask CLI command instead of calling the click.Command directly
