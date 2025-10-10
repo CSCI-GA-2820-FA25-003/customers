@@ -158,6 +158,10 @@ class TestCustomersService(TestCase):
         response = self.client.put(f"{BASE_URL}/{new_customers_addr['id']}", json=new_customers_addr)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST) 
 
+        # check when empty body returns bad request
+        response = self.client.put(f"{BASE_URL}/{new_customers['id']}", json={})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_update_customer_no_content_type(self):
         """It should return 415 for a missing Content-Type header"""
         test_customer = CustomersFactory()
