@@ -68,3 +68,32 @@ def get_customers(customer_id):
         "Returning customer: %s %s", customer.first_name, customer.last_name
     )
     return jsonify(customer.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# DELETE A CUSTOMER
+######################################################################
+@app.route("/customers/<uuid:customer_id>", methods=["DELETE"])
+def delete_customers(customer_id):
+    """
+    Delete a Customer
+
+    This endpoint will delete a Customer based on the id specified in the path
+    """
+    app.logger.info("Request to Delete a customer with id [%s]", customer_id)
+
+    customer = Customers.find(customer_id)
+
+    # Case where the customer is not found
+    if not customer:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Customer with id '{customer_id}' was not found.",
+        )
+
+    # If the customer exists, perform delete
+    app.logger.info("Customer with ID [%s] found for deletion.", customer.id)
+    customer.delete()
+
+    app.logger.info("Customer with ID [%s] delete complete.", customer_id)
+    return {}, status.HTTP_204_NO_CONTENT
