@@ -125,3 +125,35 @@ class TestYourResourceService(TestCase):
         test_customer = self._create_customers_in_db(1)[0]
         response = self.client.post(f"{BASE_URL}/{test_customer.id}")
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    # ----------------------------------------------------------
+    # TEST DELETE
+    # ----------------------------------------------------------
+
+    def test_delete_customer(self):
+        """It should Delete an existing Customer"""
+        # Create a customer to delete
+        test_customer = self._create_customers_in_db(1)[0]
+        response = self.client.delete(f"{BASE_URL}/{test_customer.id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(response.data), 0)
+
+        # Verifying that the customer is gone
+        response = self.client.get(f"{BASE_URL}/{test_customer.id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_non_existent_customer(self):
+        """It should return 404 when deleting a non-existent Customer"""
+        test_customer = CustomersFactory()
+        customers = test_customer.serialize()
+        bad_id = customers["id"]
+        response = self.client.delete(f"{BASE_URL}/{bad_id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        logging.debug("Response data = %s", data)
+        self.assertIn("was not found", data["message"])
+
+    def test_delete_customer_bad_request(self):
+        """It should return 404 for an invalid ID format in the URL"""
+        response = self.client.delete(f"{BASE_URL}/this-is-not-a-uuid")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
