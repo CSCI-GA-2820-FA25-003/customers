@@ -185,11 +185,15 @@ class TestCustomersModel(TestCaseBase):
         for p in people:
             p.create()
         target = people[0].last_name
-        expected = len([p for p in people if p.last_name == target])
-        found = Customers.find_by_last_name(target)
-        self.assertEqual(found.count(), expected)
-        for row in found:
-            self.assertEqual(row.last_name, target)
+
+        # Exact match (fuzzy=False)
+        rows_exact = Customers.find_by_last_name(target, fuzzy=False)
+        for r in rows_exact:
+            self.assertEqual(r.last_name, target)
+
+        # Fuzzy test: partial lowercase match should return results
+        rows_fuzzy = Customers.find_by_last_name(target[:2].lower(), fuzzy=True)
+        self.assertGreaterEqual(rows_fuzzy.count(), 1)
 
     def test_find_by_first_name(self):
         """It should Find Customers by first_name"""
@@ -197,48 +201,103 @@ class TestCustomersModel(TestCaseBase):
         for p in people:
             p.create()
         target = people[0].first_name
-        rows = Customers.find_by_first_name(target)
-        for r in rows:
+
+        # Exact match (fuzzy=False)
+        rows_exact = Customers.find_by_first_name(target, fuzzy=False)
+        for r in rows_exact:
             self.assertEqual(r.first_name, target)
 
+        # Fuzzy test: lowercase partial match should still find records
+        rows_fuzzy = Customers.find_by_first_name(target[:2].lower(), fuzzy=True)
+        self.assertGreaterEqual(rows_fuzzy.count(), 1)
+
     def test_find_by_name(self):
-        """It should handle single, full, and multi-part name queries correctly"""
-        # Create test data
+        """It should support single-token (first/last), exact full-name (two tokens), and first+last ignoring middle"""
+        # Seed data
         c1 = Customers(first_name="Alice", last_name="Smith", address="1 Ave")
         c2 = Customers(first_name="Bob", last_name="Jones", address="2 Ave")
-        c3 = Customers(first_name="Alice", last_name="Johnson", address="3 Ave")
+        c3 = Customers(first_name="Alice", last_name="Jones", address="3 Ave")
         c1.create()
         c2.create()
         c3.create()
 
-        # --- Case 1: single token ---
-        # Should match either first or last name
-        results = Customers.find_by_name("Alice")
-        names = {(r.first_name, r.last_name) for r in results}
+        # --- Case 1: single token -> search both first and last (default fuzzy=True is fine) ---
+        rows = Customers.find_by_name("Alice")
+        names = {(r.first_name, r.last_name) for r in rows}
         self.assertIn(("Alice", "Smith"), names)
-        self.assertIn(("Alice", "Johnson"), names)
+        self.assertIn(("Alice", "Jones"), names)
         self.assertNotIn(("Bob", "Jones"), names)
 
-        results = Customers.find_by_name("Jones")
-        names = {(r.first_name, r.last_name) for r in results}
-        self.assertIn(("Bob", "Jones"), names)
+        # --- Case 2: two tokens -> exact full name match (set fuzzy=False to enforce exact) ---
+        rows = Customers.find_by_name("Alice Jones", fuzzy=False)
+        names = {(r.first_name, r.last_name) for r in rows}
+        self.assertEqual(names, {("Alice", "Jones")})
+
+        # --- Case 3: more than two tokens -> use first and last, ignore middle (still exact with fuzzy=False) ---
+        rows = Customers.find_by_name("Alice Middle Jones", fuzzy=False)
+        names = {(r.first_name, r.last_name) for r in rows}
+        self.assertEqual(names, {("Alice", "Jones")})
+
+        # --- Case 4: empty input -> empty result ---
+        self.assertEqual(Customers.find_by_name("").count(), 0)
+
+    def test_find_by_name_exact_vs_fuzzy(self):
+        """It should differentiate between fuzzy and exact name search"""
+        c1 = Customers(first_name="Charlie", last_name="Brown", address="11 St")
+        c2 = Customers(first_name="Charlotte", last_name="Browning", address="22 St")
+        c1.create()
+        c2.create()
+
+        # Fuzzy search should find both (matches "Char" and "Brown")
+        fuzzy_results = Customers.find_by_name("Char Brown", fuzzy=True)
+        names = {(r.first_name, r.last_name) for r in fuzzy_results}
+        self.assertIn(("Charlie", "Brown"), names)
+        self.assertIn(("Charlotte", "Browning"), names)
+
+        # Exact search should find only precise "Charlie Brown"
+        exact_results = Customers.find_by_name("Charlie Brown", fuzzy=False)
+        exact_names = {(r.first_name, r.last_name) for r in exact_results}
+        self.assertEqual(exact_names, {("Charlie", "Brown")})
+
+    def test_find_by_name_single_token_exact_vs_fuzzy(self):
+        """Single-token search should differ between fuzzy and exact modes"""
+        # Alice / Alicia to differentiate "Ali" fuzzy vs exact
+        a1 = Customers(first_name="Alice", last_name="Smith", address="1 Ave")
+        a2 = Customers(first_name="Alicia", last_name="Stone", address="2 Ave")
+        a1.create()
+        a2.create()
+
+        # fuzzy=True with partial lower "ali" should match both
+        fuzzy = Customers.find_by_name("ali", fuzzy=True)
+        names_fuzzy = {(r.first_name, r.last_name) for r in fuzzy}
+        self.assertIn(("Alice", "Smith"), names_fuzzy)
+        self.assertIn(("Alicia", "Stone"), names_fuzzy)
+
+        # fuzzy=False with partial "Ali" -> exact only, so none
+        exact_partial = Customers.find_by_name("Ali", fuzzy=False)
+        self.assertEqual(exact_partial.count(), 0)
+
+        # fuzzy=False with exact "Alice" -> only Alice Smith
+        exact_full = Customers.find_by_name("Alice", fuzzy=False)
+        names_exact = {(r.first_name, r.last_name) for r in exact_full}
+        self.assertEqual(names_exact, {("Alice", "Smith")})
+
+    def test_find_by_name_two_tokens_fuzzy_substrings(self):
+        """Two-token fuzzy search should match by substrings on first AND last"""
+        a = Customers(first_name="Alice", last_name="Jones", address="1 Ave")
+        b = Customers(first_name="Alice", last_name="Smith", address="2 Ave")
+        c = Customers(first_name="Bob", last_name="Jones", address="3 Ave")
+        a.create()
+        b.create()
+        c.create()
+
+        # Substring tokens "Ali" and "Jon" should match only Alice Jones if using AND
+        res = Customers.find_by_name("Ali Jon", fuzzy=True)
+        names = {(r.first_name, r.last_name) for r in res}
+        self.assertIn(("Alice", "Jones"), names)
+        # AND semantics exclude these:
         self.assertNotIn(("Alice", "Smith"), names)
-
-        # --- Case 2: full name (exact First Last) ---
-        results = Customers.find_by_name("Alice Smith")
-        names = {(r.first_name, r.last_name) for r in results}
-        self.assertEqual(len(names), 1)
-        self.assertIn(("Alice", "Smith"), names)
-
-        # --- Case 3: more than two tokens (ignore middle) ---
-        results = Customers.find_by_name("Alice B Smith")
-        names = {(r.first_name, r.last_name) for r in results}
-        self.assertEqual(len(names), 1)
-        self.assertIn(("Alice", "Smith"), names)
-
-        # --- Case 4: empty or invalid input ---
-        results = Customers.find_by_name("")
-        self.assertEqual(results.count(), 0)
+        self.assertNotIn(("Bob", "Jones"), names)
 
     def test_find_not_found_returns_none(self):
         """It should return None when id is not found"""

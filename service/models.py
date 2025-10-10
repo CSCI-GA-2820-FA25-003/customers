@@ -54,8 +54,8 @@ class Customers(db.Model):
         CheckConstraint(
             "length(btrim(address)) > 0", name="ck_customers_address_not_blank"
         ),
-        # index on last_name
-        Index("idx_customers_last_name", "last_name"),
+        # composite index for faster full-name search
+        Index("idx_customers_full_name", "last_name", "first_name"),
     )
 
     ##################################################
@@ -146,10 +146,6 @@ class Customers(db.Model):
                 + str(error)
             ) from error
 
-        # Basic python-side validation (DB will also enforce NOT NULL and CHECK)
-        if first_name is None or last_name is None or address is None:
-            raise DataValidationError("first_name, last_name, and address are required")
-
         if isinstance(first_name, str):
             first_name = first_name.strip()
         if isinstance(last_name, str):
@@ -187,46 +183,65 @@ class Customers(db.Model):
         return cls.query.session.get(cls, by_id)
 
     @classmethod
-    def find_by_last_name(cls, last_name: str):
-        """Returns all customers that match a last_name"""
-        logger.info("Processing last_name query for %s ...", last_name)
-        return cls.query.filter(cls.last_name == last_name)
-
-    @classmethod
-    def find_by_first_name(cls, first_name: str):
-        """Returns all customers that match a first_name"""
+    def find_by_first_name(cls, first_name: str, fuzzy: bool = True):
+        """Returns all customers whose first_name matches"""
         logger.info("Processing first_name query for %s ...", first_name)
-        return cls.query.filter(cls.first_name == first_name)
+        token = first_name.strip()
+        if fuzzy:
+            return cls.query.filter(cls.first_name.ilike(f"%{token}%"))
+        return cls.query.filter(cls.first_name == token)
 
     @classmethod
-    def find_by_name(cls, name: str):
+    def find_by_last_name(cls, last_name: str, fuzzy: bool = True):
+        """Returns all customers whose last_name matches"""
+        logger.info("Processing last_name query for %s ...", last_name)
+        token = last_name.strip()
+        if fuzzy:
+            return cls.query.filter(cls.last_name.ilike(f"%{token}%"))
+        return cls.query.filter(cls.last_name == token)
+
+    @classmethod
+    def find_by_name(cls, name: str, fuzzy: bool = True):
         """Find customers by name.
         Cases handled:
-        1. Single token -> delegate to find_by_first_name or find_by_last_name
-        2. Two tokens (First Last) -> exact match
-        3. More than two tokens -> match first and last (ignore middle names)
+        1. Single token -> search both first and last
+        2. Two tokens (First Last) -> full name match
+        3. More than two tokens -> match first and last (ignore middle)
         """
         logger.info("Processing name query for %s ...", name)
         parts = name.strip().split()
 
         if not parts:
             # Empty input, return empty result
-            return cls.query.filter(cls.id is None)
+            return cls.query.filter(cls.id.is_(None))
 
-        # Case 1: Only one name provided
+        # Case 1: Single token -> search both
         if len(parts) == 1:
             token = parts[0]
-            # Combine both possibilities
-            return cls.query.filter(
-                (cls.first_name == token) | (cls.last_name == token)
-            )
+            first_matches = cls.find_by_first_name(token, fuzzy=fuzzy)
+            last_matches = cls.find_by_last_name(token, fuzzy=fuzzy)
+            return first_matches.union(last_matches)
 
-        # Case 2: Exactly two parts -> First Last
+        # Case 2: Two parts (First Last)
         elif len(parts) == 2:
             first, last = parts
-            return cls.query.filter(cls.first_name == first, cls.last_name == last)
+            if fuzzy:
+                return cls.query.filter(
+                    cls.first_name.ilike(f"%{first.strip()}%"),
+                    cls.last_name.ilike(f"%{last.strip()}%"),
+                )
+            return cls.query.filter(
+                cls.first_name == first.strip(), cls.last_name == last.strip()
+            )
 
-        # Case 3: More than two -> take first and last (ignore middle)
+        # Case 3: More than two -> take first and last
         else:
             first, last = parts[0], parts[-1]
-            return cls.query.filter(cls.first_name == first, cls.last_name == last)
+            if fuzzy:
+                return cls.query.filter(
+                    cls.first_name.ilike(f"%{first.strip()}%"),
+                    cls.last_name.ilike(f"%{last.strip()}%"),
+                )
+            return cls.query.filter(
+                cls.first_name == first.strip(), cls.last_name == last.strip()
+            )
