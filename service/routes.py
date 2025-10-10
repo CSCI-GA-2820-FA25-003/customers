@@ -23,7 +23,7 @@ and Delete Customers
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Customers
+from service.models import Customers, DataValidationError
 from service.common import status  # HTTP Status Codes
 
 
@@ -44,3 +44,54 @@ def index():
 ######################################################################
 
 # Todo: Place your REST API code here ...
+
+@app.route("/customers/<uuid:customers_id>", methods=["PUT"])
+def update_customers(customers_id):
+    """
+    Update a Customers
+
+    This endpoint will update a Customers based the body that is posted
+    """
+    app.logger.info("Request to Update a customers with id [%s]", customers_id)
+    check_content_type("application/json")
+
+    # Attempt to find the Customers and abort if not found
+    customers = Customers.find(customers_id)
+    if not customers:
+        abort(status.HTTP_404_NOT_FOUND, f"Customers with id '{customers_id}' was not found.")
+
+    # Update the Customers with the new data
+    data = request.get_json()
+    app.logger.info("Processing: %s", data)
+    try:    
+        customers.deserialize(data)
+    except DataValidationError as e:
+        abort(status.HTTP_400_BAD_REQUEST, f"{e}")
+
+    # Save the updates to the database
+    try:
+        customers.update()
+    except DataValidationError as e:
+        abort(status.HTTP_400_BAD_REQUEST, f"{e}")
+
+    app.logger.info("Customers with ID: %s updated.", customers.id)
+    return jsonify(customers.serialize()), status.HTTP_200_OK
+
+
+def check_content_type(content_type) -> None:
+    """Checks that the media type is correct"""
+    if "Content-Type" not in request.headers:
+        app.logger.error("No Content-Type specified.")
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Content-Type must be {content_type}",
+        )
+
+    if request.headers["Content-Type"] == content_type:
+        return
+
+    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        f"Content-Type must be {content_type}",
+    )

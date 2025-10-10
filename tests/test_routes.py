@@ -25,17 +25,18 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Customers
+from tests.factories import CustomersFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
-
+BASE_URL = "/customers"
 
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
 # pylint: disable=too-many-public-methods
-class TestYourResourceService(TestCase):
+class TestCustomersService(TestCase):
     """REST API Server Tests"""
 
     @classmethod
@@ -73,3 +74,87 @@ class TestYourResourceService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     # Todo: Add your test cases here...
+
+    def test_update_customers(self):
+        """It should Update an existing Customers"""
+        # create a customers to update
+        test_customers = CustomersFactory()
+        test_customers.create()
+
+        # response = self.client.post(BASE_URL, json=test_customers.serialize())
+        # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # update the customers
+        new_customers = test_customers.serialize()
+        # new_customers = response.get_json()
+        logging.debug(new_customers)
+
+        # check that first name was updated
+        new_customers_fn = new_customers.copy()
+        new_customers_fn["first_name"] = "unknown"
+        response = self.client.put(f"{BASE_URL}/{new_customers_fn['id']}", json=new_customers_fn)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        updated_customers = response.get_json()
+        self.assertEqual(updated_customers["first_name"], "unknown")
+        self.assertEqual(updated_customers["last_name"], new_customers["last_name"])
+        self.assertEqual(updated_customers["address"], new_customers["address"])
+
+        # check that last name was updated
+        new_customers_ln = new_customers.copy()
+        new_customers_ln["last_name"] = "unknown"
+        response = self.client.put(f"{BASE_URL}/{new_customers_ln['id']}", json=new_customers_ln)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        updated_customers = response.get_json()
+        self.assertEqual(updated_customers["last_name"], "unknown")
+        self.assertEqual(updated_customers["first_name"], new_customers["first_name"])
+        self.assertEqual(updated_customers["address"], new_customers["address"])
+
+        # check that address was updated
+        new_customers_addr = new_customers.copy()
+        new_customers_addr["address"] = "unknown"
+        response = self.client.put(f"{BASE_URL}/{new_customers_addr['id']}", json=new_customers_addr)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        updated_customers = response.get_json()
+        self.assertEqual(updated_customers["address"], "unknown")
+        self.assertEqual(updated_customers["first_name"], new_customers["first_name"])
+        self.assertEqual(updated_customers["last_name"], new_customers["last_name"])
+    
+    def test_update_customers_not_found(self):
+        """It should not Update a Customers that is not found"""
+        # create a customers to update
+        test_customers = CustomersFactory()
+        customers = test_customers.serialize()
+        response = self.client.put(f"{BASE_URL}/{customers['id']}", json=customers)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_customers_bad_request(self):
+        """It should not Update a Customers with bad request"""
+        # create a customers to update
+        test_customers = CustomersFactory()
+        test_customers.create()
+        # response = self.client.post(BASE_URL, json=test_customers.serialize())
+        # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # update the customers
+        new_customers = test_customers.serialize()
+        # new_customers = response.get_json()
+        logging.debug(new_customers)
+
+        # check when first name was updated to empty returns bad request
+        new_customers_fn = new_customers.copy()
+        new_customers_fn["first_name"] = ""
+        response = self.client.put(f"{BASE_URL}/{new_customers_fn['id']}", json=new_customers_fn)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # check when last name was updated to empty returns bad request
+        new_customers_ln = new_customers.copy()
+        new_customers_ln["last_name"] = ""
+        response = self.client.put(f"{BASE_URL}/{new_customers_ln['id']}", json=new_customers_ln)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # check when address was updated to empty returns bad request
+        new_customers_addr = new_customers.copy()
+        new_customers_addr["address"] = ""
+        response = self.client.put(f"{BASE_URL}/{new_customers_addr['id']}", json=new_customers_addr)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST) 
+
