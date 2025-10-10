@@ -69,10 +69,7 @@ def update_customers(customers_id):
         abort(status.HTTP_400_BAD_REQUEST, f"{e}")
 
     # Save the updates to the database
-    try:
-        customers.update()
-    except DataValidationError as e:
-        abort(status.HTTP_400_BAD_REQUEST, f"{e}")
+    customers.update()
 
     app.logger.info("Customers with ID: %s updated.", customers.id)
     return jsonify(customers.serialize()), status.HTTP_200_OK

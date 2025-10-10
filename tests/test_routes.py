@@ -158,3 +158,25 @@ class TestCustomersService(TestCase):
         response = self.client.put(f"{BASE_URL}/{new_customers_addr['id']}", json=new_customers_addr)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST) 
 
+    def test_update_customer_no_content_type(self):
+        """It should return 415 for a missing Content-Type header"""
+        test_customer = CustomersFactory()
+        test_customer.create()
+    
+        response = self.client.put(
+            f"{BASE_URL}/{test_customer.id}",
+            # No content_type specified
+        )
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_update_customer_wrong_content_type(self):
+        """It should return 415 for an unsupported media type"""
+        test_customer = CustomersFactory()
+        test_customer.create()
+    
+        response = self.client.put(
+            f"{BASE_URL}/{test_customer.id}",
+            data="hello world",
+            content_type="text/plain"  # Not JSON
+        )
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
