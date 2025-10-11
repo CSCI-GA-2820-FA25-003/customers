@@ -47,9 +47,7 @@ def create_customer():
     Expected fields:
         - first_name
         - last_name
-        - email
         - address
-        - password
     """
     app.logger.info("Request to create a new customer")
 
