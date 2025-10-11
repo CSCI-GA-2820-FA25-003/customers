@@ -54,7 +54,7 @@ def create_customer():
     app.logger.info("Request to create a new customer")
 
     data = request.get_json()
-    required_fields = ["first_name", "last_name", "email", "address", "password"]
+    required_fields = ["first_name", "last_name", "address"]
 
     # Check for missing fields
     for field in required_fields:
@@ -66,7 +66,6 @@ def create_customer():
         "id": 1,
         "first_name": data["first_name"],
         "last_name": data["last_name"],
-        "email": data["email"],
         "address": data["address"],
         "created_at": "2025-10-07T00:00:00Z",
     }
