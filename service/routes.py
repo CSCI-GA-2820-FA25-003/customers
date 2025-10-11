@@ -86,7 +86,7 @@ def check_content_type(content_type) -> None:
             f"Content-Type must be {content_type}",
         )
 
-    if request.headers["Content-Type"] == content_type:
+    if request.headers["Content-Type"].lower().startswith(content_type):
         return
 
     app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
