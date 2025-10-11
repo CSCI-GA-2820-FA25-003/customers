@@ -193,6 +193,20 @@ class TestCustomersService(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
+    def test_update_customer_json_charset_content_type(self):
+        """It should return 200 for a correct content type with charset"""
+        test_customer = CustomersFactory()
+        test_customer.create()
+        new_customer = test_customer.serialize()
+        new_customer["first_name"] = "New Name"
+
+        response = self.client.put(
+            f"{BASE_URL}/{test_customer.id}",
+            json=new_customer,
+            content_type="application/json; charset=utf-8",  # JSON with charset
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     # ----------------------------------------------------------
     # TEST LIST
     # ----------------------------------------------------------
