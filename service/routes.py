@@ -96,4 +96,4 @@ def delete_customers(customer_id):
     customer.delete()
 
     app.logger.info("Customer with ID [%s] delete complete.", customer_id)
-    return {}, status.HTTP_204_NO_CONTENT
+    return "", status.HTTP_204_NO_CONTENT
