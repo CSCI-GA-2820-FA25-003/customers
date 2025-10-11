@@ -21,7 +21,7 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete Customers
 """
 
-from flask import jsonify, request, url_for, abort
+from flask import jsonify, request
 from flask import current_app as app  # Import Flask application
 from service.models import Customers, DataValidationError
 from service.common import status  # HTTP Status Codes
@@ -47,6 +47,38 @@ def index():
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
+
+
+# LIST ALL CUSTOMERS
+######################################################################
+@app.route("/customers", methods=["GET"])
+def list_customers():
+    """Returns all of the customers"""
+    app.logger.info("Request for customer list")
+
+    customers = []
+
+    # Parse any arguments from the query string
+    first_name = request.args.get("first_name")
+    last_name = request.args.get("last_name")
+    address = request.args.get("address")
+
+    if first_name:
+        app.logger.info("Find by first name: %s", first_name)
+        customers = Customers.find_by_first_name(first_name)
+    elif last_name:
+        app.logger.info("Find by last name: %s", last_name)
+        customers = Customers.find_by_last_name(last_name)
+    elif address:
+        app.logger.info("Find by address: %s", address)
+        customers = Customers.find_by_address(address)
+    else:
+        app.logger.info("Find all")
+        customers = Customers.all()
+
+    results = [customer.serialize() for customer in customers]
+    app.logger.info("Returning %d customers", len(results))
+    return jsonify(results), status.HTTP_200_OK
 
 
 @app.route("/customers/<uuid:customers_id>", methods=["PUT"])

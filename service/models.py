@@ -245,3 +245,12 @@ class Customers(db.Model):
             return cls.query.filter(
                 cls.first_name == first.strip(), cls.last_name == last.strip()
             )
+
+    @classmethod
+    def find_by_address(cls, address: str, fuzzy: bool = True):
+        """Returns all customers whose address matches"""
+        logger.info("Processing address query for %s ...", address)
+        token = address.strip()
+        if fuzzy:
+            return cls.query.filter(cls.address.ilike(f"%{token}%"))
+        return cls.query.filter(cls.address == token)
