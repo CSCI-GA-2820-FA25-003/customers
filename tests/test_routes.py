@@ -25,10 +25,13 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Customers
+from .factories import CustomersFactory
+from urllib.parse import quote_plus
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
+BASE_URL = "/customers"
 
 
 ######################################################################
@@ -63,6 +66,19 @@ class TestYourResourceService(TestCase):
         """This runs after each test"""
         db.session.remove()
 
+    ########################################################
+    # Utility function to bulk create customers
+    ############################################################
+    def _create_customers_in_db(self, count: int = 1) -> list:
+        """Factory method to create customers in bulk directly in the database"""
+        customers = []
+        for _ in range(count):
+            test_customer = CustomersFactory()
+            # The create() method is from your Customers model in models.py
+            test_customer.create()
+            customers.append(test_customer)
+        return customers
+
     ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
     ######################################################################
@@ -73,3 +89,69 @@ class TestYourResourceService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     # Todo: Add your test cases here...
+
+    # ----------------------------------------------------------
+    # TEST LIST
+    # ----------------------------------------------------------
+    def test_get_customer_list(self):
+        """It should Get a list of Customers"""
+        self._create_customers_in_db(5)
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), 5)
+
+    # ----------------------------------------------------------
+    # TEST QUERY
+    # ----------------------------------------------------------
+
+    def test_query_by_firstname(self):
+        """It should Query Customers by frist name"""
+        customers = self._create_customers_in_db(5)
+        test_name = customers[0].first_name
+        name_count = len(
+            [customer for customer in customers if customer.first_name == test_name]
+        )
+        response = self.client.get(
+            BASE_URL, query_string=f"first_name={quote_plus(test_name)}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), name_count)
+        # check the data just to be sure
+        for customer in data:
+            self.assertEqual(customer["first_name"], test_name)
+
+    def test_query_by_lastname(self):
+        """It should Query Customers by last name"""
+        customers = self._create_customers_in_db(5)
+        test_name = customers[0].last_name
+        name_count = len(
+            [customer for customer in customers if customer.last_name == test_name]
+        )
+        response = self.client.get(
+            BASE_URL, query_string=f"last_name={quote_plus(test_name)}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), name_count)
+        # check the data just to be sure
+        for customer in data:
+            self.assertEqual(customer["last_name"], test_name)
+
+    def test_query_by_address(self):
+        """It should Query Customers by address"""
+        customers = self._create_customers_in_db(5)
+        test_address = customers[0].address
+        address_count = len(
+            [customer for customer in customers if customer.address == test_address]
+        )
+        response = self.client.get(
+            BASE_URL, query_string=f"address={quote_plus(test_address)}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), address_count)
+        # check the data just to be sure
+        for customer in data:
+            self.assertEqual(customer["address"], test_address)

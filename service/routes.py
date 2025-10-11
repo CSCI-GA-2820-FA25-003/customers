@@ -54,19 +54,19 @@ def list_customers():
     customers = []
 
     # Parse any arguments from the query string
-    id = request.args.get("id")
     first_name = request.args.get("first_name")
     last_name = request.args.get("last_name")
+    address = request.args.get("address")
 
-    if id:
-        app.logger.info("Find by id: %s", id)
-        customers = Customers.find(id)
-    elif first_name:
+    if first_name:
         app.logger.info("Find by first name: %s", first_name)
         customers = Customers.find_by_first_name(first_name)
     elif last_name:
         app.logger.info("Find by last name: %s", last_name)
         customers = Customers.find_by_last_name(last_name)
+    elif address:
+        app.logger.info("Find by address: %s", address)
+        customers = Customers.find_by_address(address)
     else:
         app.logger.info("Find all")
         customers = Customers.all()
