@@ -88,41 +88,27 @@ class TestCustomersService(TestCase):
         # new_customers = response.get_json()
         logging.debug(new_customers)
 
-        # check that first name was updated
-        new_customers_fn = new_customers.copy()
-        new_customers_fn["first_name"] = "unknown"
-        response = self.client.put(
-            f"{BASE_URL}/{new_customers_fn['id']}", json=new_customers_fn
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        updated_customers = response.get_json()
-        self.assertEqual(updated_customers["first_name"], "unknown")
-        self.assertEqual(updated_customers["last_name"], new_customers["last_name"])
-        self.assertEqual(updated_customers["address"], new_customers["address"])
-
-        # check that last name was updated
-        new_customers_ln = new_customers.copy()
-        new_customers_ln["last_name"] = "unknown"
-        response = self.client.put(
-            f"{BASE_URL}/{new_customers_ln['id']}", json=new_customers_ln
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        updated_customers = response.get_json()
-        self.assertEqual(updated_customers["last_name"], "unknown")
-        self.assertEqual(updated_customers["first_name"], new_customers["first_name"])
-        self.assertEqual(updated_customers["address"], new_customers["address"])
-
-        # check that address was updated
-        new_customers_addr = new_customers.copy()
-        new_customers_addr["address"] = "unknown"
-        response = self.client.put(
-            f"{BASE_URL}/{new_customers_addr['id']}", json=new_customers_addr
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        updated_customers = response.get_json()
-        self.assertEqual(updated_customers["address"], "unknown")
-        self.assertEqual(updated_customers["first_name"], new_customers["first_name"])
-        self.assertEqual(updated_customers["last_name"], new_customers["last_name"])
+        # check for each field being updated individually
+        valid_fields = ["first_name", "last_name", "address"]
+        for field in valid_fields:
+            temp = new_customers.copy()
+            temp[field] = "unknown"
+            response = self.client.put(f"{BASE_URL}/{temp['id']}", json=temp)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            updated_customers = response.get_json()
+            for f in valid_fields:
+                if f == field:
+                    self.assertEqual(
+                        updated_customers[f],
+                        "unknown",
+                        msg=f"Field {f} not updated correctly when updating {field}",
+                    )
+                else:
+                    self.assertEqual(
+                        updated_customers[f],
+                        new_customers[f],
+                        msg=f"Field {f} changed when updating {field}",
+                    )
 
     def test_update_customers_not_found(self):
         """It should not Update a Customers that is not found"""
@@ -145,31 +131,19 @@ class TestCustomersService(TestCase):
         # new_customers = response.get_json()
         logging.debug(new_customers)
 
-        # check when first name was updated to empty returns bad request
-        new_customers_fn = new_customers.copy()
-        new_customers_fn["first_name"] = ""
-        response = self.client.put(
-            f"{BASE_URL}/{new_customers_fn['id']}", json=new_customers_fn
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # check when non-empty field was updated to empty returns bad request
+        non_empty_fields = ["first_name", "last_name", "address"]
+        for field in non_empty_fields:
+            temp = new_customers.copy()
+            temp[field] = ""
+            response = self.client.put(f"{BASE_URL}/{temp['id']}", json=temp)
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_400_BAD_REQUEST,
+                msg=f"Updating {field} to empty did not return 400",
+            )
 
-        # check when last name was updated to empty returns bad request
-        new_customers_ln = new_customers.copy()
-        new_customers_ln["last_name"] = ""
-        response = self.client.put(
-            f"{BASE_URL}/{new_customers_ln['id']}", json=new_customers_ln
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        # check when address was updated to empty returns bad request
-        new_customers_addr = new_customers.copy()
-        new_customers_addr["address"] = ""
-        response = self.client.put(
-            f"{BASE_URL}/{new_customers_addr['id']}", json=new_customers_addr
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        # check when empty body returns bad request
+        # check when missing or empty body returns bad request
         response = self.client.put(f"{BASE_URL}/{new_customers['id']}", json={})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
