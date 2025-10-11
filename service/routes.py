@@ -21,7 +21,7 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete Customers
 """
 
-from flask import jsonify, request, url_for, abort
+from flask import jsonify, request
 from flask import current_app as app  # Import Flask application
 from service.models import Customers
 from service.common import status  # HTTP Status Codes
@@ -43,4 +43,34 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-# Todo: Place your REST API code here ...
+
+# LIST ALL CUSTOMERS
+######################################################################
+@app.route("/customers", methods=["GET"])
+def list_customers():
+    """Returns all of the customers"""
+    app.logger.info("Request for customer list")
+
+    customers = []
+
+    # Parse any arguments from the query string
+    id = request.args.get("id")
+    first_name = request.args.get("first_name")
+    last_name = request.args.get("last_name")
+
+    if id:
+        app.logger.info("Find by id: %s", id)
+        customers = Customers.find(id)
+    elif first_name:
+        app.logger.info("Find by first name: %s", first_name)
+        customers = Customers.find_by_first_name(first_name)
+    elif last_name:
+        app.logger.info("Find by last name: %s", last_name)
+        customers = Customers.find_by_last_name(last_name)
+    else:
+        app.logger.info("Find all")
+        customers = Customers.all()
+
+    results = [customer.serialize() for customer in customers]
+    app.logger.info("Returning %d customers", len(results))
+    return jsonify(results), status.HTTP_200_OK
