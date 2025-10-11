@@ -53,27 +53,35 @@ def index():
 ######################################################################
 @app.route("/customers", methods=["GET"])
 def list_customers():
-    """Returns all of the customers"""
+    """Returns all of the customers (optionally filtered by multiple fields)"""
     app.logger.info("Request for customer list")
-
-    customers = []
 
     # Parse any arguments from the query string
     first_name = request.args.get("first_name")
     last_name = request.args.get("last_name")
     address = request.args.get("address")
 
+    # Build a dynamic query by adding filters for each parameter that exists
+    query = Customers.query
+    applied = []
+
     if first_name:
-        app.logger.info("Find by first name: %s", first_name)
-        customers = Customers.find_by_first_name(first_name)
-    elif last_name:
-        app.logger.info("Find by last name: %s", last_name)
-        customers = Customers.find_by_last_name(last_name)
-    elif address:
-        app.logger.info("Find by address: %s", address)
-        customers = Customers.find_by_address(address)
+        query = query.filter(Customers.first_name == first_name)
+        applied.append(f"first_name={first_name}")
+    if last_name:
+        query = query.filter(Customers.last_name == last_name)
+        applied.append(f"last_name={last_name}")
+    if address:
+        query = query.filter(Customers.address == address)
+        applied.append(f"address={address}")
+
+    # If any filters were applied, execute the filtered query
+    # Otherwise, return all customers
+    if applied:
+        app.logger.info("Find with filters: %s", ", ".join(applied))
+        customers = query.all()
     else:
-        app.logger.info("Find all")
+        app.logger.info("Find all customers")
         customers = Customers.all()
 
     results = [customer.serialize() for customer in customers]
