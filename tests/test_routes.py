@@ -72,4 +72,35 @@ class TestYourResourceService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # Todo: Add your test cases here...
+
+    def test_create_customer_success(client):
+    """POST /customers with valid data should return 201"""
+    payload = {
+        "first_name": "Jane",
+        "last_name": "Doe",
+        "address": "1 Test Ave"
+    }
+    resp = client.post("/customers", json=payload)
+    assert resp.status_code == 201
+    data = resp.get_json()
+    for key in ["id", "first_name", "last_name", "address", "created_at"]:
+        assert key in data
+    assert data["first_name"] == payload["first_name"]
+    assert data["last_name"] == payload["last_name"]
+    assert data["address"] == payload["address"]
+
+
+def test_create_customer_missing_fields(client):
+    """POST /customers missing field should return 400"""
+    valid = {
+        "first_name": "Jane",
+        "last_name": "Doe",
+        "address": "1 Test Ave"
+    }
+    for key in list(valid.keys()):
+        temp = valid.copy()
+        temp.pop(key)
+        resp = client.post("/customers", json=temp)
+        assert resp.status_code == 400
+        assert f"Missing or empty field: {key}" in resp.get_data(as_text=True)
+
