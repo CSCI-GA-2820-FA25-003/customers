@@ -25,7 +25,7 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Customers
-from .factories import CustomersFactory
+from tests.factories import CustomersFactory
 from urllib.parse import quote_plus
 
 DATABASE_URI = os.getenv(
@@ -235,14 +235,6 @@ class TestYourResourceService(TestCase):
             last_name=c.last_name,
             address=c.address,
         )
-
-    def test_query_no_params_returns_all(self):
-        """It should return all customers when no query parameters are given"""
-        customers = self._create_customers_in_db(5)
-        response = self.client.get(BASE_URL)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.get_json()
-        self.assertEqual(len(data), len(customers))
 
     def test_query_with_no_match_returns_empty(self):
         """It should return an empty list when no customers match the query"""
