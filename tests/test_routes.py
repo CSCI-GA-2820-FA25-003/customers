@@ -26,7 +26,6 @@ from wsgi import app
 from service.common import status
 from service.models import db, Customers
 from tests.factories import CustomersFactory
-from .factories import CustomersFactory
 from urllib.parse import quote_plus
 
 DATABASE_URI = os.getenv(
@@ -79,6 +78,13 @@ class TestCustomersService(TestCase):
             customers.append(test_customer)
         return customers
 
+    def test_index(self):
+        """It should call the home page"""
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["name"], "Customers Demo REST API Service")
+
     ######################################################################
     #  C R E A T E   C U S T O M E R   T E S T S
     ######################################################################
@@ -120,13 +126,6 @@ class TestCustomersService(TestCase):
     ######################################################################
     #  U P D A T E   C U S T O M E R   T E S T S
     ######################################################################
-
-    def test_index(self):
-        """It should call the home page"""
-        response = self.client.get("/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.get_json()
-        self.assertEqual(data["name"], "Customers Demo REST API Service")
 
     def test_update_customers(self):
         """It should Update an existing Customers"""
@@ -243,11 +242,6 @@ class TestCustomersService(TestCase):
             content_type="application/json; charset=utf-8",  # JSON with charset
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_index(self):
-        """It should call the home page"""
-        resp = self.client.get("/")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     ######################################################################
     #  R E A D   C U S T O M E R   T E S T S

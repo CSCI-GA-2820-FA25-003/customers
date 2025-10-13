@@ -82,46 +82,6 @@ def create_customer():
 ######################################################################
 # UPDATE A CUSTOMER
 ######################################################################
-# LIST ALL CUSTOMERS
-######################################################################
-@app.route("/customers", methods=["GET"])
-def list_customers():
-    """Returns all of the customers (optionally filtered by multiple fields)"""
-    app.logger.info("Request for customer list")
-
-    # Parse any arguments from the query string
-    first_name = request.args.get("first_name")
-    last_name = request.args.get("last_name")
-    address = request.args.get("address")
-
-    # Build a dynamic query by adding filters for each parameter that exists
-    query = Customers.query
-    applied = []
-
-    if first_name:
-        query = query.filter(Customers.first_name == first_name)
-        applied.append(f"first_name={first_name}")
-    if last_name:
-        query = query.filter(Customers.last_name == last_name)
-        applied.append(f"last_name={last_name}")
-    if address:
-        query = query.filter(Customers.address == address)
-        applied.append(f"address={address}")
-
-    # If any filters were applied, execute the filtered query
-    # Otherwise, return all customers
-    if applied:
-        app.logger.info("Find with filters: %s", ", ".join(applied))
-        customers = query.all()
-    else:
-        app.logger.info("Find all customers")
-        customers = Customers.all()
-
-    results = [customer.serialize() for customer in customers]
-    app.logger.info("Returning %d customers", len(results))
-    return jsonify(results), status.HTTP_200_OK
-
-
 @app.route("/customers/<uuid:customers_id>", methods=["PUT"])
 def update_customers(customers_id):
     """
@@ -172,6 +132,47 @@ def check_content_type(content_type) -> None:
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
         f"Content-Type must be {content_type}",
     )
+
+
+######################################################################
+# LIST ALL CUSTOMERS
+######################################################################
+@app.route("/customers", methods=["GET"])
+def list_customers():
+    """Returns all of the customers (optionally filtered by multiple fields)"""
+    app.logger.info("Request for customer list")
+
+    # Parse any arguments from the query string
+    first_name = request.args.get("first_name")
+    last_name = request.args.get("last_name")
+    address = request.args.get("address")
+
+    # Build a dynamic query by adding filters for each parameter that exists
+    query = Customers.query
+    applied = []
+
+    if first_name:
+        query = query.filter(Customers.first_name == first_name)
+        applied.append(f"first_name={first_name}")
+    if last_name:
+        query = query.filter(Customers.last_name == last_name)
+        applied.append(f"last_name={last_name}")
+    if address:
+        query = query.filter(Customers.address == address)
+        applied.append(f"address={address}")
+
+    # If any filters were applied, execute the filtered query
+    # Otherwise, return all customers
+    if applied:
+        app.logger.info("Find with filters: %s", ", ".join(applied))
+        customers = query.all()
+    else:
+        app.logger.info("Find all customers")
+        customers = Customers.all()
+
+    results = [customer.serialize() for customer in customers]
+    app.logger.info("Returning %d customers", len(results))
+    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################
