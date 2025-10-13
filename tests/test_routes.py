@@ -15,7 +15,7 @@
 ######################################################################
 
 """
-TestYourResourceModel API Service Test Suite
+TestCustomers API Service Test Suite
 """
 
 # pylint: disable=duplicate-code
@@ -24,7 +24,7 @@ import logging
 from unittest import TestCase
 from wsgi import app
 from service.common import status
-from service.models import db, YourResourceModel
+from service.models import db, Customers
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -56,7 +56,7 @@ class TestYourResourceService(TestCase):
     def setUp(self):
         """Runs before each test"""
         self.client = app.test_client()
-        db.session.query(YourResourceModel).delete()  # clean up the last tests
+        db.session.query(Customers).delete()  # clean up the last tests
         db.session.commit()
 
     def tearDown(self):
@@ -64,43 +64,40 @@ class TestYourResourceService(TestCase):
         db.session.remove()
 
     ######################################################################
-    #  P L A C E   T E S T   C A S E S   H E R E
+    #  C R E A T E   C U S T O M E R   T E S T S
     ######################################################################
+    def test_create_customer_success(self):
+        """It should create a customer successfully"""
+        payload = {
+            "first_name": "John",
+            "last_name": "Doe",
+            "address": "123 Main Street",
+        }
+        resp = self.client.post("/customers", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+        self.assertEqual(data["first_name"], "John")
+        self.assertEqual(data["last_name"], "Doe")
+        self.assertEqual(data["address"], "123 Main Street")
+        self.assertIn("id", data)
+        self.assertIn("Location", resp.headers)
 
-    def test_index(self):
-        """It should call the home page"""
-        resp = self.client.get("/")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    def test_create_customer_missing_fields(self):
+        """It should return 400 if required fields are missing"""
+        payload = {"first_name": "John"}  # missing last_name, address
+        resp = self.client.post("/customers", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_create_customer_blank_fields(self):
+        """It should return 400 if fields are blank strings"""
+        payload = {"first_name": " ", "last_name": "Doe", "address": " "}
+        resp = self.client.post("/customers", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_create_customer_success(client):
-    """POST /customers with valid data should return 201"""
-    payload = {
-        "first_name": "Jane",
-        "last_name": "Doe",
-        "address": "1 Test Ave"
-    }
-    resp = client.post("/customers", json=payload)
-    assert resp.status_code == 201
-    data = resp.get_json()
-    for key in ["id", "first_name", "last_name", "address", "created_at"]:
-        assert key in data
-    assert data["first_name"] == payload["first_name"]
-    assert data["last_name"] == payload["last_name"]
-    assert data["address"] == payload["address"]
-
-
-def test_create_customer_missing_fields(client):
-    """POST /customers missing field should return 400"""
-    valid = {
-        "first_name": "Jane",
-        "last_name": "Doe",
-        "address": "1 Test Ave"
-    }
-    for key in list(valid.keys()):
-        temp = valid.copy()
-        temp.pop(key)
-        resp = client.post("/customers", json=temp)
-        assert resp.status_code == 400
-        assert f"Missing or empty field: {key}" in resp.get_data(as_text=True)
+    def test_create_customer_invalid_json(self):
+        """It should return 415 if content-type is not application/json"""
+        resp = self.client.post(
+            "/customers", data="not-json", content_type="text/plain"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 

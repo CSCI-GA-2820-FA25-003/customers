@@ -15,15 +15,15 @@
 ######################################################################
 
 """
-YourResourceModel Service
+Customers Service
 
 This service implements a REST API that allows you to Create, Read, Update
-and Delete YourResourceModel
+and Delete Customers
 """
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import YourResourceModel
+from service.models import Customers
 from service.common import status  # HTTP Status Codes
 
 
@@ -37,43 +37,39 @@ def index():
         "Reminder: return some useful information in json format about the service here",
         status.HTTP_200_OK,
     )
+
+
 ######################################################################
 # CREATE A CUSTOMER
 ######################################################################
 @app.route("/customers", methods=["POST"])
 def create_customer():
     """
-    Creates a new customer record based on JSON body input.
-    Expected fields:
-        - first_name
-        - last_name
-        - address
+    Creates a new Customer
+    POST /customers
     """
-    app.logger.info("Request to create a new customer")
+    app.logger.info("Request to create a new Customer")
+
+    # Content-Type must be JSON
+    if not request.is_json:
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            description="Content-Type must be application/json",
+        )
 
     data = request.get_json()
-    required_fields = ["first_name", "last_name", "address"]
+    customer = Customers()
 
-    # Check for missing fields
-    for field in required_fields:
-        if field not in data or not data[field]:
-            abort(400, description=f"Missing or empty field: {field}")
+    try:
+        customer.deserialize(data)
+        customer.create()
+    except Exception as e:
+        app.logger.error("Error creating customer: %s", str(e))
+        abort(status.HTTP_400_BAD_REQUEST, description=str(e))
 
-    # Example of a mock customer record (no real DB yet)
-    customer = {
-        "id": 1,
-        "first_name": data["first_name"],
-        "last_name": data["last_name"],
-        "address": data["address"],
-        "created_at": "2025-10-07T00:00:00Z",
-    }
+    app.logger.info("Customer created successfully: %s", customer.id)
+    resp = jsonify(customer.serialize())
+    resp.status_code = status.HTTP_201_CREATED
+    resp.headers["Location"] = f"/customers/{customer.id}"
+    return resp
 
-    return jsonify(customer), status.HTTP_201_CREATED
-
-
-
-######################################################################
-#  R E S T   A P I   E N D P O I N T S
-######################################################################
-
-# Todo: Place your REST API code here ...
