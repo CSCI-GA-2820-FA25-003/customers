@@ -75,13 +75,50 @@ class TestCustomersService(TestCase):
         customers = []
         for _ in range(count):
             test_customer = CustomersFactory()
-            # The create() method is from your Customers model in models.py
             test_customer.create()
             customers.append(test_customer)
         return customers
 
     ######################################################################
-    #  P L A C E   T E S T   C A S E S   H E R E
+    #  C R E A T E   C U S T O M E R   T E S T S
+    ######################################################################
+    def test_create_customer_success(self):
+        """It should create a customer successfully"""
+        payload = {
+            "first_name": "John",
+            "last_name": "Doe",
+            "address": "123 Main Street",
+        }
+        resp = self.client.post("/customers", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+        self.assertEqual(data["first_name"], "John")
+        self.assertEqual(data["last_name"], "Doe")
+        self.assertEqual(data["address"], "123 Main Street")
+        self.assertIn("id", data)
+        self.assertIn("Location", resp.headers)
+
+    def test_create_customer_missing_fields(self):
+        """It should return 400 if required fields are missing"""
+        payload = {"first_name": "John"}  # missing last_name, address
+        resp = self.client.post("/customers", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_customer_blank_fields(self):
+        """It should return 400 if fields are blank strings"""
+        payload = {"first_name": " ", "last_name": "Doe", "address": " "}
+        resp = self.client.post("/customers", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_customer_invalid_json(self):
+        """It should return 415 if content-type is not application/json"""
+        resp = self.client.post(
+            "/customers", data="not-json", content_type="text/plain"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    ######################################################################
+    #  U P D A T E   C U S T O M E R   T E S T S
     ######################################################################
 
     def test_index(self):
@@ -206,6 +243,82 @@ class TestCustomersService(TestCase):
             content_type="application/json; charset=utf-8",  # JSON with charset
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_index(self):
+        """It should call the home page"""
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    ######################################################################
+    #  R E A D   C U S T O M E R   T E S T S
+    ######################################################################
+
+    def test_get_customer(self):
+        """It should Get a single Customer"""
+        # get the id of a Customer
+        test_customer = self._create_customers_in_db(1)[0]
+        response = self.client.get(f"{BASE_URL}/{test_customer.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.get_json()
+        self.assertEqual(data["id"], str(test_customer.id))
+        self.assertEqual(data["first_name"], test_customer.first_name)
+        self.assertEqual(data["last_name"], test_customer.last_name)
+        self.assertEqual(data["address"], test_customer.address)
+
+    def test_get_customer_not_found(self):
+        """It should not Get a Customer thats not found"""
+        test_customer = CustomersFactory()
+        customers = test_customer.serialize()
+        bad_id = customers["id"]
+        response = self.client.get(f"{BASE_URL}/{bad_id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        logging.debug("Response data = %s", data)
+        self.assertIn("was not found", data["message"])
+
+    def test_get_customer_bad_request(self):
+        """It should return a 404 for an invalid ID format"""
+        response = self.client.get(f"{BASE_URL}/this-is-not-a-uuid")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_method_not_allowed(self):
+        """It should not allow a POST request on the /customers/{id} URL"""
+        test_customer = self._create_customers_in_db(1)[0]
+        response = self.client.post(f"{BASE_URL}/{test_customer.id}")
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    ######################################################################
+    #  D E L E T E   C U S T O M E R   T E S T S
+    ######################################################################
+
+    def test_delete_customer(self):
+        """It should Delete an existing Customer"""
+        # Create a customer to delete
+        test_customer = self._create_customers_in_db(1)[0]
+        response = self.client.delete(f"{BASE_URL}/{test_customer.id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(response.data), 0)
+
+        # Verifying that the customer is gone
+        response = self.client.get(f"{BASE_URL}/{test_customer.id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_non_existent_customer(self):
+        """It should return 404 when deleting a non-existent Customer"""
+        test_customer = CustomersFactory()
+        customers = test_customer.serialize()
+        bad_id = customers["id"]
+        response = self.client.delete(f"{BASE_URL}/{bad_id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        logging.debug("Response data = %s", data)
+        self.assertIn("was not found", data["message"])
+
+    def test_delete_customer_bad_request(self):
+        """It should return 404 for an invalid ID format in the URL"""
+        response = self.client.delete(f"{BASE_URL}/this-is-not-a-uuid")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     # ----------------------------------------------------------
     # TEST LIST

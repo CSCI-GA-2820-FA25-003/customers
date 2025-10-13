@@ -45,10 +45,43 @@ def index():
 
 
 ######################################################################
-#  R E S T   A P I   E N D P O I N T S
+# CREATE A CUSTOMER
 ######################################################################
+@app.route("/customers", methods=["POST"])
+def create_customer():
+    """
+    Creates a new Customer
+    POST /customers
+    """
+    app.logger.info("Request to create a new Customer")
+
+    # Content-Type must be JSON
+    if not request.is_json:
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            description="Content-Type must be application/json",
+        )
+
+    data = request.get_json()
+    customer = Customers()
+
+    try:
+        customer.deserialize(data)
+        customer.create()
+    except Exception as e:
+        app.logger.error("Error creating customer: %s", str(e))
+        abort(status.HTTP_400_BAD_REQUEST, description=str(e))
+
+    app.logger.info("Customer created successfully: %s", customer.id)
+    resp = jsonify(customer.serialize())
+    resp.status_code = status.HTTP_201_CREATED
+    resp.headers["Location"] = f"/customers/{customer.id}"
+    return resp
 
 
+######################################################################
+# UPDATE A CUSTOMER
+######################################################################
 # LIST ALL CUSTOMERS
 ######################################################################
 @app.route("/customers", methods=["GET"])
@@ -139,3 +172,58 @@ def check_content_type(content_type) -> None:
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
         f"Content-Type must be {content_type}",
     )
+
+
+######################################################################
+# READ A CUSTOMER
+######################################################################
+@app.route("/customers/<uuid:customer_id>", methods=["GET"])
+def get_customers(customer_id):
+    """
+    Retrieve a single Customer
+
+    This endpoint will return a Customer based on it's id
+    """
+    app.logger.info("Request to Retrieve a customer with id [%s]", customer_id)
+
+    # Attempt to find the Customer and abort if not found
+    customer = Customers.find(customer_id)
+    if not customer:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Customer with id '{customer_id}' was not found.",
+        )
+
+    app.logger.info(
+        "Returning customer: %s %s", customer.first_name, customer.last_name
+    )
+    return jsonify(customer.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# DELETE A CUSTOMER
+######################################################################
+@app.route("/customers/<uuid:customer_id>", methods=["DELETE"])
+def delete_customers(customer_id):
+    """
+    Delete a Customer
+
+    This endpoint will delete a Customer based on the id specified in the path
+    """
+    app.logger.info("Request to Delete a customer with id [%s]", customer_id)
+
+    customer = Customers.find(customer_id)
+
+    # Case where the customer is not found
+    if not customer:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Customer with id '{customer_id}' was not found.",
+        )
+
+    # If the customer exists, perform delete
+    app.logger.info("Customer with ID [%s] found for deletion.", customer.id)
+    customer.delete()
+
+    app.logger.info("Customer with ID [%s] delete complete.", customer_id)
+    return "", status.HTTP_204_NO_CONTENT
