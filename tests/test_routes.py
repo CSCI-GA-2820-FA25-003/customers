@@ -279,9 +279,9 @@ class TestCustomersService(TestCase):
         response = self.client.post(f"{BASE_URL}/{test_customer.id}")
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    # ----------------------------------------------------------
-    # TEST DELETE
-    # ----------------------------------------------------------
+    ######################################################################
+    #  D E L E T E   C U S T O M E R   T E S T S
+    ######################################################################
 
     def test_delete_customer(self):
         """It should Delete an existing Customer"""
