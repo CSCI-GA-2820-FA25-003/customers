@@ -66,13 +66,42 @@ class TestCustomersService(TestCase):
         db.session.remove()
 
     ######################################################################
-    #  P L A C E   T E S T   C A S E S   H E R E
+    #  C R E A T E   C U S T O M E R   T E S T S
     ######################################################################
+    def test_create_customer_success(self):
+        """It should create a customer successfully"""
+        payload = {
+            "first_name": "John",
+            "last_name": "Doe",
+            "address": "123 Main Street",
+        }
+        resp = self.client.post("/customers", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+        self.assertEqual(data["first_name"], "John")
+        self.assertEqual(data["last_name"], "Doe")
+        self.assertEqual(data["address"], "123 Main Street")
+        self.assertIn("id", data)
+        self.assertIn("Location", resp.headers)
 
-    def test_index(self):
-        """It should call the home page"""
-        resp = self.client.get("/")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    def test_create_customer_missing_fields(self):
+        """It should return 400 if required fields are missing"""
+        payload = {"first_name": "John"}  # missing last_name, address
+        resp = self.client.post("/customers", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_customer_blank_fields(self):
+        """It should return 400 if fields are blank strings"""
+        payload = {"first_name": " ", "last_name": "Doe", "address": " "}
+        resp = self.client.post("/customers", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_customer_invalid_json(self):
+        """It should return 415 if content-type is not application/json"""
+        resp = self.client.post(
+            "/customers", data="not-json", content_type="text/plain"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_update_customers(self):
         """It should Update an existing Customers"""

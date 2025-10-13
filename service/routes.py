@@ -40,8 +40,38 @@ def index():
 
 
 ######################################################################
-#  R E S T   A P I   E N D P O I N T S
+# CREATE A CUSTOMER
 ######################################################################
+@app.route("/customers", methods=["POST"])
+def create_customer():
+    """
+    Creates a new Customer
+    POST /customers
+    """
+    app.logger.info("Request to create a new Customer")
+
+    # Content-Type must be JSON
+    if not request.is_json:
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            description="Content-Type must be application/json",
+        )
+
+    data = request.get_json()
+    customer = Customers()
+
+    try:
+        customer.deserialize(data)
+        customer.create()
+    except Exception as e:
+        app.logger.error("Error creating customer: %s", str(e))
+        abort(status.HTTP_400_BAD_REQUEST, description=str(e))
+
+    app.logger.info("Customer created successfully: %s", customer.id)
+    resp = jsonify(customer.serialize())
+    resp.status_code = status.HTTP_201_CREATED
+    resp.headers["Location"] = f"/customers/{customer.id}"
+    return resp
 
 
 @app.route("/customers/<uuid:customers_id>", methods=["PUT"])
