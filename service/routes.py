@@ -74,6 +74,9 @@ def create_customer():
     return resp
 
 
+######################################################################
+# UPDATE A CUSTOMER
+######################################################################
 @app.route("/customers/<uuid:customers_id>", methods=["PUT"])
 def update_customers(customers_id):
     """

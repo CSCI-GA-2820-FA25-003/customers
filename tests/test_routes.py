@@ -73,7 +73,6 @@ class TestCustomersService(TestCase):
         customers = []
         for _ in range(count):
             test_customer = CustomersFactory()
-            # The create() method is from your Customers model in models.py
             test_customer.create()
             customers.append(test_customer)
         return customers
@@ -115,6 +114,10 @@ class TestCustomersService(TestCase):
             "/customers", data="not-json", content_type="text/plain"
         )
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    ######################################################################
+    #  U P D A T E   C U S T O M E R   T E S T S
+    ######################################################################
 
     def test_update_customers(self):
         """It should Update an existing Customers"""
@@ -237,9 +240,9 @@ class TestCustomersService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # ----------------------------------------------------------
-    # TEST READ
-    # ----------------------------------------------------------
+    ######################################################################
+    #  R E A D   C U S T O M E R   T E S T S
+    ######################################################################
 
     def test_get_customer(self):
         """It should Get a single Customer"""
