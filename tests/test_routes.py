@@ -65,6 +65,18 @@ class TestCustomersService(TestCase):
         """This runs after each test"""
         db.session.remove()
 
+    ########################################################
+    # Utility function to bulk create customers
+    ############################################################
+    def _create_customers_in_db(self, count: int = 1) -> list:
+        """Factory method to create customers in bulk directly in the database"""
+        customers = []
+        for _ in range(count):
+            test_customer = CustomersFactory()
+            test_customer.create()
+            customers.append(test_customer)
+        return customers
+
     ######################################################################
     #  C R E A T E   C U S T O M E R   T E S T S
     ######################################################################
@@ -102,6 +114,10 @@ class TestCustomersService(TestCase):
             "/customers", data="not-json", content_type="text/plain"
         )
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    ######################################################################
+    #  U P D A T E   C U S T O M E R   T E S T S
+    ######################################################################
 
     def test_update_customers(self):
         """It should Update an existing Customers"""
@@ -218,3 +234,47 @@ class TestCustomersService(TestCase):
             content_type="application/json; charset=utf-8",  # JSON with charset
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_index(self):
+        """It should call the home page"""
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    ######################################################################
+    #  R E A D   C U S T O M E R   T E S T S
+    ######################################################################
+
+    def test_get_customer(self):
+        """It should Get a single Customer"""
+        # get the id of a Customer
+        test_customer = self._create_customers_in_db(1)[0]
+        response = self.client.get(f"{BASE_URL}/{test_customer.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.get_json()
+        self.assertEqual(data["id"], str(test_customer.id))
+        self.assertEqual(data["first_name"], test_customer.first_name)
+        self.assertEqual(data["last_name"], test_customer.last_name)
+        self.assertEqual(data["address"], test_customer.address)
+
+    def test_get_customer_not_found(self):
+        """It should not Get a Customer thats not found"""
+        test_customer = CustomersFactory()
+        customers = test_customer.serialize()
+        bad_id = customers["id"]
+        response = self.client.get(f"{BASE_URL}/{bad_id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        logging.debug("Response data = %s", data)
+        self.assertIn("was not found", data["message"])
+
+    def test_get_customer_bad_request(self):
+        """It should return a 404 for an invalid ID format"""
+        response = self.client.get(f"{BASE_URL}/this-is-not-a-uuid")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_method_not_allowed(self):
+        """It should not allow a POST request on the /customers/{id} URL"""
+        test_customer = self._create_customers_in_db(1)[0]
+        response = self.client.post(f"{BASE_URL}/{test_customer.id}")
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
