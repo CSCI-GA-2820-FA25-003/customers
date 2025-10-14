@@ -179,6 +179,18 @@ class TestCustomersModel(TestCaseBase):
         self.assertRaises(DataValidationError, c1.create)
         self.assertRaises(DataValidationError, c2.create)
 
+    def test_find_by_address(self):
+        """It should Find Customers by address"""
+        people = CustomersFactory.create_batch(10)
+        for p in people:
+            p.create()
+        target = people[0].address
+        count = len([p for p in people if p.address == target])
+        found = Customers.find_by_address(target)
+        self.assertEqual(found.count(), count)
+        for p in found:
+            self.assertEqual(p.address, target)
+
     def test_find_by_last_name(self):
         """It should Find Customers by last_name"""
         people = CustomersFactory.create_batch(10)
