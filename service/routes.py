@@ -33,8 +33,13 @@ from service.common import status  # HTTP Status Codes
 @app.route("/")
 def index():
     """Root URL response"""
+    app.logger.info("Request for Root URL")
     return (
-        "Reminder: return some useful information in json format about the service here",
+        jsonify(
+            name="Customers Demo REST API Service",
+            version="1.0",
+            paths=url_for("list_customers", _external=True),
+        ),
         status.HTTP_200_OK,
     )
 
@@ -128,6 +133,7 @@ def check_content_type(content_type) -> None:
         f"Content-Type must be {content_type}",
     )
 
+
 ######################################################################
 # LIST ALL CUSTOMERS
 ######################################################################
@@ -167,6 +173,7 @@ def list_customers():
     results = [customer.serialize() for customer in customers]
     app.logger.info("Returning %d customers", len(results))
     return jsonify(results), status.HTTP_200_OK
+
 
 ######################################################################
 # READ A CUSTOMER

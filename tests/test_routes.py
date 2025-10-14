@@ -22,11 +22,11 @@ TestCustomers API Service Test Suite
 import os
 import logging
 from unittest import TestCase
+from urllib.parse import quote_plus
 from wsgi import app
 from service.common import status
 from service.models import db, Customers
 from tests.factories import CustomersFactory
-from urllib.parse import quote_plus
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -69,6 +69,7 @@ class TestCustomersService(TestCase):
     ########################################################
     # Utility function to bulk create customers
     ############################################################
+
     def _create_customers_in_db(self, count: int = 1) -> list:
         """Factory method to create customers in bulk directly in the database"""
         customers = []
@@ -78,9 +79,17 @@ class TestCustomersService(TestCase):
             customers.append(test_customer)
         return customers
 
+    def test_index(self):
+        """It should call the home page"""
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(data["name"], "Customers Demo REST API Service")
+
     ######################################################################
     #  C R E A T E   C U S T O M E R   T E S T S
     ######################################################################
+
     def test_create_customer_success(self):
         """It should create a customer successfully"""
         payload = {
@@ -236,16 +245,10 @@ class TestCustomersService(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_index(self):
-        """It should call the home page"""
-        resp = self.client.get("/")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+    ######################################################################
+    #  L I S T   C U S T O M E R   T E S T S
+    ######################################################################
 
-    # Todo: Add your test cases here...
-
-    # ----------------------------------------------------------
-    # TEST LIST
-    # ----------------------------------------------------------
     def test_get_customer_list(self):
         """It should Get a list of Customers"""
         self._create_customers_in_db(5)
@@ -399,6 +402,7 @@ class TestCustomersService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertEqual(len(data), 0)
+
     ######################################################################
     #  R E A D   C U S T O M E R   T E S T S
     ######################################################################
