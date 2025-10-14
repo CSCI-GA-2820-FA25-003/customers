@@ -52,8 +52,9 @@ class Customers(db.Model):
     __table_args__ = (
         # CHECK: address after trim must not be empty
         CheckConstraint(
-            "length(btrim(address)) > 0", name="ck_customers_address_not_blank"
-        ),
+    "length(trim(address)) > 0", name="ck_customers_address_not_blank"
+),
+
         # composite index for faster full-name search
         Index("idx_customers_full_name", "last_name", "first_name"),
     )
