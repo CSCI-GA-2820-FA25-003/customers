@@ -52,9 +52,8 @@ class Customers(db.Model):
     __table_args__ = (
         # CHECK: address after trim must not be empty
         CheckConstraint(
-    "length(trim(address)) > 0", name="ck_customers_address_not_blank"
-),
-
+            "length(trim(address)) > 0", name="ck_customers_address_not_blank"
+        ),
         # composite index for faster full-name search
         Index("idx_customers_full_name", "last_name", "first_name"),
     )
@@ -126,46 +125,51 @@ class Customers(db.Model):
 
     def deserialize(self, data: dict):
         """
-        Deserializes a customer from a dictionary
+        Deserializes a customer from a dictionary.
 
         Args:
-            data (dict): A dictionary containing the resource data
+            data (dict): A dictionary containing the resource data.
         """
+        fields = self._extract_raw_fields(data)
+        cleaned = self._clean_fields(fields)
+        self._validate_fields(cleaned)
+
+        self.first_name = cleaned["first_name"]
+        self.last_name = cleaned["last_name"]
+        self.address = cleaned["address"]
+        return self
+
+    def _extract_raw_fields(self, data: dict) -> dict:
+        """Extract raw fields from input dictionary, handling type/structure errors."""
         try:
-            first_name = data["first_name"]
-            last_name = data["last_name"]
-            address = data["address"]
+            return {
+                "first_name": data["first_name"],
+                "last_name": data["last_name"],
+                "address": data["address"],
+            }
         except AttributeError as error:
-            raise DataValidationError("Invalid attribute: " + error.args[0]) from error
+            raise DataValidationError(f"Invalid attribute: {error.args[0]}") from error
         except KeyError as error:
             raise DataValidationError(
-                "Invalid customers: missing " + error.args[0]
+                f"Missing required field: {error.args[0]}"
             ) from error
         except TypeError as error:
             raise DataValidationError(
-                "Invalid Customers: body of request contained bad or no data "
-                + str(error)
+                "Invalid Customers: request body contained bad or no data " + str(error)
             ) from error
 
-        if isinstance(first_name, str):
-            first_name = first_name.strip()
-        if isinstance(last_name, str):
-            last_name = last_name.strip()
-        if isinstance(address, str):
-            address = address.strip()
+    def _clean_fields(self, fields: dict) -> dict:
+        """Trim whitespace from all string fields."""
+        return {
+            key: (value.strip() if isinstance(value, str) else value)
+            for key, value in fields.items()
+        }
 
-        if not first_name:
-            raise DataValidationError("first_name must be non-empty")
-        if not last_name:
-            raise DataValidationError("last_name must be non-empty")
-        if not address:
-            # Mirrors DB CHECK on address
-            raise DataValidationError("address must be non-empty")
-
-        self.first_name = first_name
-        self.last_name = last_name
-        self.address = address
-        return self
+    def _validate_fields(self, fields: dict):
+        """Validate that all required fields are non-empty."""
+        for field in ("first_name", "last_name", "address"):
+            if not fields.get(field):
+                raise DataValidationError(f"{field} must be non-empty")
 
     ##################################################
     # CLASS METHODS
@@ -224,7 +228,7 @@ class Customers(db.Model):
             return first_matches.union(last_matches)
 
         # Case 2: Two parts (First Last)
-        elif len(parts) == 2:
+        if len(parts) == 2:
             first, last = parts
             if fuzzy:
                 return cls.query.filter(
@@ -236,16 +240,16 @@ class Customers(db.Model):
             )
 
         # Case 3: More than two -> take first and last
-        else:
-            first, last = parts[0], parts[-1]
-            if fuzzy:
-                return cls.query.filter(
-                    cls.first_name.ilike(f"%{first.strip()}%"),
-                    cls.last_name.ilike(f"%{last.strip()}%"),
-                )
+
+        first, last = parts[0], parts[-1]
+        if fuzzy:
             return cls.query.filter(
-                cls.first_name == first.strip(), cls.last_name == last.strip()
+                cls.first_name.ilike(f"%{first.strip()}%"),
+                cls.last_name.ilike(f"%{last.strip()}%"),
             )
+        return cls.query.filter(
+            cls.first_name == first.strip(), cls.last_name == last.strip()
+        )
 
     @classmethod
     def find_by_address(cls, address: str, fuzzy: bool = True):
