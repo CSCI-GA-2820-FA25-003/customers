@@ -33,7 +33,7 @@ Steps:
 Inside the dev container
 
 ```bash
-flask run --host=0.0.0.0 --port=8080
+honcho start
 ```
 If successful, the server should start at:
 ```
