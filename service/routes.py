@@ -152,13 +152,13 @@ def list_customers():
     applied = []
 
     if first_name:
-        query = query.filter(Customers.first_name == first_name)
+        query = query.filter(Customers.first_name.ilike(f"%{first_name}%"))
         applied.append(f"first_name={first_name}")
     if last_name:
-        query = query.filter(Customers.last_name == last_name)
+        query = query.filter(Customers.last_name.ilike(f"%{last_name}%"))
         applied.append(f"last_name={last_name}")
     if address:
-        query = query.filter(Customers.address == address)
+        query = query.filter(Customers.address.ilike(f"%{address}%"))
         applied.append(f"address={address}")
 
     # If any filters were applied, execute the filtered query
