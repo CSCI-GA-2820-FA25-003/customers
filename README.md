@@ -1,37 +1,130 @@
-# NYU DevOps Project Template
-
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
-
-This is a skeleton you can use to start your projects.
-
-**Note:** _Feel free to overwrite this `README.md` file with the one that describes your project._
+# Customers RESTful API Service
 
 ## Overview
 
-This project template contains starter code for your class project. The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately. All you need to do is add your functionality. You can use the [lab-flask-tdd](https://github.com/nyu-devops/lab-flask-tdd) for code examples to copy from.
+This project is a **Flask-based RESTful API** for managing customer data in an e-commerce application.  
+It allows clients to **create, read, update, delete (CRUD) and list** customer records and supports filtering by first name, last name, and address.
 
-## Automatic Setup
+## Getting Started
 
-The best way to use this repo is to start your own repo using it as a git template. To do this just press the green **Use this template** button in GitHub and this will become the source for your repository.
+Follow these steps to clone the repository, start the development environment, and run the API.
 
-## Manual Setup
-
-You can also clone this repository and then copy and paste the starter code into your project repo folder on your local computer. Be careful not to copy over your own `README.md` file so be selective in what you copy.
-
-There are 4 hidden files that you will need to copy manually if you use the Mac Finder or Windows Explorer to copy files from this folder into your repo folder.
-
-These should be copied using a bash shell as follows:
-
+#### 1 Clone the repository
 ```bash
-    cp .gitignore  ../<your_repo_folder>/
-    cp .flaskenv ../<your_repo_folder>/
-    cp .gitattributes ../<your_repo_folder>/
+git clone https://github.com/CSCI-GA-2820-FA25-003/customers.git
+cd customers
 ```
 
-## Contents
+#### 2 Open in VS Code Dev Container
+We strongly recommend running this project in a **Dev Container** for consistent dependencies.
+Make sure you have installed:
 
-The project contains the following:
+- [Docker](https://docs.docker.com/get-docker/)
+- [VS Code](https://code.visualstudio.com/)
+- [Remote - Containers Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+
+Steps:
+1.Open the project folder in VS Code
+2.When prompted, click "Reopen in Container"
+3.VS Code will automatically build and start the dev container (this may take a few minutes the first time)
+
+#### 3 Run the Flask Application
+
+Inside the dev container
+
+```bash
+honcho start
+```
+If successful, the server should start at:
+```
+http://localhost:8080/
+```
+
+## API Endpoints & Example  `curl` Calls
+
+Below are example commands you can copy and paste to test the API directly from your terminal.
+These examples assume the server is running locally on `http://localhost:8080`.
+
+##### Create a new customer
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"first_name": "John", "last_name": "Doe", "address": "123 Main Street, Anytown, USA"}' \
+  http://localhost:8080/customers
+```
+
+##### Read a customer by ID
+Replace `<VALID-ID-HERE>` with a valid customer ID:
+```bash
+curl -X GET http://localhost:8080/customers/<VALID-ID-HERE>
+```
+
+##### Update a customer by ID
+Replace `<VALID-ID-HERE>` with a real customer ID returned from the list or create endpoint.
+```bash
+curl -X PUT \
+  -H "Content-Type: application/json" \
+  -d '{"first_name": "Jane", "last_name": "Doe", "address": "456 Elm Street, Cityville, USA"}' \
+  http://localhost:8080/customers/<VALID-ID-HERE>
+```
+
+##### Delete a customer by ID
+Replace `<VALID-ID-HERE>` with a valid customer ID:
+```bash
+curl -X DELETE http://localhost:8080/customers/<VALID-ID-HERE>
+```
+
+##### Retrieve all customers
+```bash
+curl -X GET http://localhost:8080/customers
+```
+
+##### Filter customers by first name
+
+Replace `<FIRST_NAME>` with the customer's first name you want to search for:
+```bash
+curl -X GET "http://localhost:8080/customers?first_name=<FIRST_NAME>"
+```
+
+##### Filter customers by last name
+
+Replace `<LAST_NAME>` with the customer's last name you want to search for:
+```bash
+curl -X GET "http://localhost:8080/customers?last_name=<LAST_NAME>"
+```
+
+##### Filter customers by address
+
+Replace `<ADDRESS>` with the customer's address you want to search for:
+```bash
+curl -X GET "http://localhost:8080/customers?address=<ADDRESS>"
+```
+
+##### Filter customers by first name and last name
+Replace `<FIRST_NAME>` and `<LAST_NAME>` with valid values:
+```bash
+curl -X GET "http://localhost:8080/customers?first_name=<FIRST_NAME>&last_name=<LAST_NAME>"
+```
+
+##### Filter customers by first name and address
+Replace `<FIRST_NAME>` and `<ADDRESS>` with valid values:
+```bash
+curl -X GET "http://localhost:8080/customers?first_name=<FIRST_NAME>&address=<ADDRESS>"
+```
+
+##### Filter customers by last name and address
+Replace `<LAST_NAME>` and `<ADDRESS>` with valid values:
+```bash
+curl -X GET "http://localhost:8080/customers?last_name=<LAST_NAME>&address=<ADDRESS>"
+```
+
+##### Filter customers by first name, last name, and address
+Replace `<FIRST_NAME>`, `<LAST_NAME>,` and `<ADDRESS>` with valid values:
+```bash
+curl -X GET "http://localhost:8080/customers?first_name=<FIRST_NAME>&last_name=<LAST_NAME>&address=<ADDRESS>"
+```
+
+## Project Structure
 
 ```text
 .gitignore          - this will ignore vagrant and other metadata files
