@@ -459,15 +459,13 @@ class TestCustomersService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_non_existent_customer(self):
-        """It should return 404 when deleting a non-existent Customer"""
+        """It should return 204 No Content when deleting a non-existent Customer"""
         test_customer = CustomersFactory()
         customers = test_customer.serialize()
         bad_id = customers["id"]
         response = self.client.delete(f"{BASE_URL}/{bad_id}")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        data = response.get_json()
-        logging.debug("Response data = %s", data)
-        self.assertIn("was not found", data["message"])
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(response.data), 0)
 
     def test_delete_customer_bad_request(self):
         """It should return 404 for an invalid ID format in the URL"""
