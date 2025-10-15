@@ -215,16 +215,10 @@ def delete_customers(customer_id):
 
     customer = Customers.find(customer_id)
 
-    # Case where the customer is not found
-    if not customer:
-        abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Customer with id '{customer_id}' was not found.",
-        )
-
-    # If the customer exists, perform delete
-    app.logger.info("Customer with ID [%s] found for deletion.", customer.id)
-    customer.delete()
+    if customer:
+        # If the customer exists, perform delete
+        app.logger.info("Customer with ID [%s] found for deletion.", customer.id)
+        customer.delete()
 
     app.logger.info("Customer with ID [%s] delete complete.", customer_id)
     return "", status.HTTP_204_NO_CONTENT
