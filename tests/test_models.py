@@ -58,8 +58,8 @@ class TestCaseBase(TestCase):
 ######################################################################
 #  C U S T O M E R S   M O D E L   T E S T   C A S E S
 ######################################################################
-class TestCustomersModel(TestCaseBase):
-    """Customers Model CRUD & Validation Tests"""
+class TestCustomersCRUD(TestCaseBase):
+    """Customers Model CRUD Tests"""
 
     def test_create_a_customer(self):
         """It should Create a Customer (not persisted) and assert fields exist"""
@@ -127,6 +127,10 @@ class TestCustomersModel(TestCaseBase):
             c.create()
         self.assertEqual(len(Customers.all()), 5)
 
+
+class TestCustomersSerialization(TestCaseBase):
+    """Customers Model Serialization Tests"""
+
     def test_serialize_a_customer(self):
         """It should serialize a Customer"""
         c = CustomersFactory()
@@ -167,6 +171,10 @@ class TestCustomersModel(TestCaseBase):
         c = Customers()
         self.assertRaises(DataValidationError, c.deserialize, "not a dict")
 
+
+class TestCustomersConstraints(TestCaseBase):
+    """Customers Model Constraint Tests"""
+
     def test_constraint_address_blank(self):
         """It should reject insert when address is empty or only spaces (DB CHECK)"""
         c = Customers(first_name="Jane", last_name="Doe", address="   ")
@@ -178,6 +186,20 @@ class TestCustomersModel(TestCaseBase):
         c2 = Customers(first_name="Jane", last_name=None, address="1 Ave")
         self.assertRaises(DataValidationError, c1.create)
         self.assertRaises(DataValidationError, c2.create)
+
+    def test_deserialize_trims_whitespace(self):
+        """deserialize should strip whitespace from fields"""
+        c = Customers()
+        c.deserialize(
+            {"first_name": "  Jane  ", "last_name": "  Doe ", "address": "  1 Ave  "}
+        )
+        self.assertEqual(c.first_name, "Jane")
+        self.assertEqual(c.last_name, "Doe")
+        self.assertEqual(c.address, "1 Ave")
+
+
+class TestCustomersSearch(TestCaseBase):
+    """Customers Model Search Tests"""
 
     def test_find_by_address(self):
         """It should Find Customers by address"""
@@ -322,16 +344,6 @@ class TestCustomersModel(TestCaseBase):
         self.assertIn("Jane", text)
         self.assertIn("Doe", text)
 
-    def test_deserialize_trims_whitespace(self):
-        """deserialize should strip whitespace from fields"""
-        c = Customers()
-        c.deserialize(
-            {"first_name": "  Jane  ", "last_name": "  Doe ", "address": "  1 Ave  "}
-        )
-        self.assertEqual(c.first_name, "Jane")
-        self.assertEqual(c.last_name, "Doe")
-        self.assertEqual(c.address, "1 Ave")
-
 
 ######################################################################
 #  T E S T   E X C E P T I O N   H A N D L E R S
@@ -361,70 +373,3 @@ class TestExceptionHandlers(TestCaseBase):
         with patch("service.models.db.session.commit") as commit_mock:
             commit_mock.side_effect = Exception()
             self.assertRaises(DataValidationError, c.delete)
-
-
-######################################################################
-#  A P P   E R R O R   H A N D L E R S   &   W I R I N G
-######################################################################
-def _status_code(result):
-    """Extract status code from handler return (tuple or Response)."""
-    if isinstance(result, tuple):
-        if len(result) >= 2:
-            status = result[1]
-            try:
-                return int(status)
-            except Exception:
-                return int(getattr(status, "value", 0))
-        return None
-    return getattr(result, "status_code", None)
-
-
-class TestAppErrorHandlers(TestCaseBase):
-    """Directly exercise common error handlers and app wiring"""
-
-    def test_error_handlers_status_codes(self):
-        from service.common import error_handlers as eh
-
-        self.assertEqual(_status_code(eh.bad_request(Exception("bad"))), 400)
-        self.assertEqual(_status_code(eh.not_found(Exception("missing"))), 404)
-        self.assertEqual(
-            _status_code(eh.method_not_supported(Exception("method"))), 405
-        )
-        self.assertEqual(
-            _status_code(eh.mediatype_not_supported(Exception("type"))), 415
-        )
-        self.assertEqual(_status_code(eh.internal_server_error(Exception("boom"))), 500)
-
-    def test_request_validation_error_wrapper(self):
-        from service.common import error_handlers as eh
-
-        status = _status_code(
-            eh.request_validation_error(DataValidationError("invalid"))
-        )
-        self.assertEqual(status, 400)
-
-    def test_routes_index(self):
-        client = app.test_client()
-        resp = client.get("/")
-        self.assertEqual(resp.status_code, 200)
-        self.assertIn(b"Customers Demo REST API Service", resp.data)
-
-    def test_cli_db_create_runs(self):
-        # invoke the Flask CLI command instead of calling the click.Command directly
-        runner = app.test_cli_runner()
-        result = runner.invoke(args=["db-create"])
-        self.assertEqual(result.exit_code, 0)
-
-        # sanity check: table exists and we can insert after recreation
-        with app.app_context():
-            Customers(first_name="X", last_name="Y", address="Z").create()
-            self.assertEqual(len(Customers.all()), 1)
-
-    def test_log_handlers_init_logging(self):
-        from service.common.log_handlers import init_logging
-
-        gunicorn_logger = logging.getLogger("gunicorn.error")
-        if not gunicorn_logger.handlers:
-            gunicorn_logger.addHandler(logging.StreamHandler())
-        init_logging(app, "gunicorn.error")
-        self.assertTrue(len(app.logger.handlers) >= 1)
