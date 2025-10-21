@@ -309,6 +309,7 @@ class TestCustomersService(TestCase):
         for customer in data:
             self.assertEqual(customer["address"], test_address)
 
+    # pylint: disable=too-many-arguments
     def _expect_and_assert(
         self, customers, resp_json, *, first_name=None, last_name=None, address=None
     ):
