@@ -68,8 +68,8 @@ def create_customer():
     try:
         customer.deserialize(data)
         customer.create()
-    except Exception as e:
-        app.logger.error("Error creating customer: %s", str(e))
+    except DataValidationError as e:
+        app.logger.error("Validation error: %s", str(e))
         abort(status.HTTP_400_BAD_REQUEST, description=str(e))
 
     app.logger.info("Customer created successfully: %s", customer.id)
