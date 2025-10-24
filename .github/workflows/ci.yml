@@ -1,0 +1,93 @@
+name: CI Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: python:3.11-slim
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: pgs3cr3t
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install OS dependencies
+        run: |
+          apt-get update
+          apt-get install -y make git curl gpg postgresql-client build-essential gcc
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install -U pip pipenv
+          pipenv install --system --dev
+
+      - name: Linting
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
+          # test for complexity. The GitHub editor is 127 chars wide
+          flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
+          # Run pylint to catch other PEP8 errors
+          pylint service tests --max-line-length=127
+
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h postgres -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+      - name: Create database tables
+        run: |
+          python -c "
+          from service import create_app
+          from service.models import db, Customers
+          app = create_app()
+          with app.app_context():
+              db.drop_all()
+              db.create_all()
+              print('\n=== Database Tables ===')
+              print(db.metadata.tables.keys())
+              print('======================\n')
+              db.session.commit()"
+        env:
+          FLASK_APP: "service:create_app"
+          FLASK_ENV: "testing"
+          DATABASE_URI: "postgresql+psycopg://postgres:pgs3cr3t@postgres:5432/test_db"
+
+      - name: Run unit tests with PyTest
+        run: |
+          pytest --pspec --cov=service --cov-fail-under=95 --cov-report=xml -v
+        env:
+          FLASK_APP: "service:create_app"
+          FLASK_ENV: "testing"
+          DATABASE_URI: "postgresql+psycopg://postgres:pgs3cr3t@postgres:5432/test_db"
+
+      ######################################################################
+      # Create a CODECOV_TOKEN in Settings -> Secrets and variables -> Actions
+      # before enabling Codecov upload
+      ######################################################################
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: CSCI-GA-2820-FA25-003/customers
