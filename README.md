@@ -1,5 +1,11 @@
 # Customers RESTful API Service
 
+[![CI Build](https://github.com/CSCI-GA-2820-FA25-003/customers/actions/workflows/ci.yml/badge.svg)](https://github.com/CSCI-GA-2820-FA25-003/customers/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/CSCI-GA-2820-FA25-003/customers/graph/badge.svg?token=2FYGK51XFT)](https://codecov.io/gh/CSCI-GA-2820-FA25-003/customers)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python-red.svg)](https://www.python.org/)
+[![Open in Remote - Containers](https://img.shields.io/static/v1?label=Remote%20-%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/CSCI-GA-2820-FA25-003/customers)
+
 ## Overview
 
 This project is a **Flask-based RESTful API** for managing customer data in an e-commerce application.  
