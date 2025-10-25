@@ -21,8 +21,7 @@ This service implements a REST API that allows you to Create, Read, Update,
 and Delete Customers
 """
 
-from flask import jsonify, request, url_for, abort
-from flask import current_app as app  # Import Flask application
+from flask import jsonify, request, abort, current_app as app
 from service.models import Customers, DataValidationError
 from service.common import status  # HTTP Status Codes
 
