@@ -127,6 +127,54 @@ class TestCustomersCRUD(TestCaseBase):
             c.create()
         self.assertEqual(len(Customers.all()), 5)
 
+    def test_suspend_a_customer(self):
+        """It should Suspend a Customer"""
+        c = CustomersFactory()
+        c.create()
+        self.assertFalse(c.suspended)
+        c.suspend()
+        self.assertTrue(c.suspended)
+        found = Customers.find(c.id)
+        self.assertTrue(found.suspended)
+
+    def test_unsuspend_a_customer(self):
+        """It should Unsuspend a Customer"""
+        c = CustomersFactory()
+        c.create()
+        c.suspend()
+        self.assertTrue(c.suspended)
+        c.unsuspend()
+        self.assertFalse(c.suspended)
+        found = Customers.find(c.id)
+        self.assertFalse(found.suspended)
+
+    def test_suspend_idempotency(self):
+        """It should handle suspending an already suspended customer"""
+        c = CustomersFactory()
+        c.create()
+        c.suspend()
+        self.assertTrue(c.suspended)
+        c.suspend()
+        self.assertTrue(c.suspended)
+
+    def test_unsuspend_idempotency(self):
+        """It should handle unsuspending an already active customer"""
+        c = CustomersFactory()
+        c.create()
+        self.assertFalse(c.suspended)
+        c.unsuspend()
+        self.assertFalse(c.suspended)
+
+    def test_suspend_no_id(self):
+        """It should not Suspend a Customer with no id"""
+        c = Customers(first_name="A", last_name="B", address="1 Ave")
+        self.assertRaises(DataValidationError, c.suspend)
+
+    def test_unsuspend_no_id(self):
+        """It should not Unsuspend a Customer with no id"""
+        c = Customers(first_name="A", last_name="B", address="1 Ave")
+        self.assertRaises(DataValidationError, c.unsuspend)
+
 
 class TestCustomersSerialization(TestCaseBase):
     """Customers Model Serialization Tests"""
@@ -141,6 +189,8 @@ class TestCustomersSerialization(TestCaseBase):
         self.assertEqual(data["first_name"], c.first_name)
         self.assertEqual(data["last_name"], c.last_name)
         self.assertEqual(data["address"], c.address)
+        self.assertIn("suspended", data)
+        self.assertEqual(data["suspended"], c.suspended)
         self.assertIsNotNone(data["created_at"])
         self.assertIsNotNone(data["updated_at"])
 
@@ -373,3 +423,19 @@ class TestExceptionHandlers(TestCaseBase):
         with patch("service.models.db.session.commit") as commit_mock:
             commit_mock.side_effect = Exception()
             self.assertRaises(DataValidationError, c.delete)
+
+    def test_suspend_exception(self):
+        """It should catch a suspend exception and raise DataValidationError"""
+        c = CustomersFactory()
+        c.create()
+        with patch("service.models.db.session.commit") as commit_mock:
+            commit_mock.side_effect = Exception()
+            self.assertRaises(DataValidationError, c.suspend)
+
+    def test_unsuspend_exception(self):
+        """It should catch an unsuspend exception and raise DataValidationError"""
+        c = CustomersFactory()
+        c.create()
+        with patch("service.models.db.session.commit") as commit_mock:
+            commit_mock.side_effect = Exception()
+            self.assertRaises(DataValidationError, c.unsuspend)

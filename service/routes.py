@@ -222,3 +222,51 @@ def delete_customers(customer_id):
 
     app.logger.info("Customer with ID [%s] delete complete.", customer_id)
     return "", status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+# SUSPEND A CUSTOMER
+######################################################################
+@app.route("/customers/<uuid:customer_id>/suspend", methods=["PUT"])
+def suspend_customer(customer_id):
+    """
+    Suspend a Customer
+
+    This endpoint will suspend a Customer based on the id specified in the path
+    """
+    app.logger.info("Request to suspend customer with id [%s]", customer_id)
+
+    customer = Customers.find(customer_id)
+    if not customer:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Customer with id '{customer_id}' was not found.",
+        )
+
+    customer.suspend()
+    app.logger.info("Customer with ID [%s] suspended.", customer_id)
+    return jsonify(customer.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# UNSUSPEND A CUSTOMER
+######################################################################
+@app.route("/customers/<uuid:customer_id>/unsuspend", methods=["PUT"])
+def unsuspend_customer(customer_id):
+    """
+    Unsuspend a Customer
+
+    This endpoint will unsuspend a Customer based on the id specified in the path
+    """
+    app.logger.info("Request to unsuspend customer with id [%s]", customer_id)
+
+    customer = Customers.find(customer_id)
+    if not customer:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Customer with id '{customer_id}' was not found.",
+        )
+
+    customer.unsuspend()
+    app.logger.info("Customer with ID [%s] unsuspended.", customer_id)
+    return jsonify(customer.serialize()), status.HTTP_200_OK

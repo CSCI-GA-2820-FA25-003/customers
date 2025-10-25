@@ -41,6 +41,7 @@ class Customers(db.Model):
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     address = db.Column(db.Text, nullable=False)
+    suspended = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
     updated_at = db.Column(
         db.DateTime,
@@ -104,6 +105,32 @@ class Customers(db.Model):
             logger.error("Error deleting record: %s", self)
             raise DataValidationError(e) from e
 
+    def suspend(self):
+        """Suspends a customer account"""
+        if not self.id:
+            raise DataValidationError("Suspend called with empty 'id'")
+        logger.info("Suspending customer %s %s", self.first_name, self.last_name)
+        self.suspended = True
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.error("Error suspending customer: %s", self)
+            raise DataValidationError(e) from e
+
+    def unsuspend(self):
+        """Unsuspends a customer account"""
+        if not self.id:
+            raise DataValidationError("Unsuspend called with empty 'id'")
+        logger.info("Unsuspending customer %s %s", self.first_name, self.last_name)
+        self.suspended = False
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.error("Error unsuspending customer: %s", self)
+            raise DataValidationError(e) from e
+
     def serialize(self):
         """Serializes a customer into a dictionary"""
         return {
@@ -111,6 +138,7 @@ class Customers(db.Model):
             "first_name": self.first_name,
             "last_name": self.last_name,
             "address": self.address,
+            "suspended": self.suspended,
             "created_at": (
                 self.created_at.isoformat()
                 if isinstance(self.created_at, datetime)
