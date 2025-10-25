@@ -17,12 +17,11 @@
 """
 Customers Service
 
-This service implements a REST API that allows you to Create, Read, Update
+This service implements a REST API that allows you to Create, Read, Update,
 and Delete Customers
 """
 
-from flask import jsonify, request, url_for, abort
-from flask import current_app as app  # Import Flask application
+from flask import jsonify, request, abort, current_app as app
 from service.models import Customers, DataValidationError
 from service.common import status  # HTTP Status Codes
 
@@ -32,13 +31,13 @@ from service.common import status  # HTTP Status Codes
 ######################################################################
 @app.route("/")
 def index():
-    """Root URL response"""
+    """Root URL response with service metadata"""
     app.logger.info("Request for Root URL")
     return (
         jsonify(
-            name="Customers Demo REST API Service",
-            version="1.0",
-            paths=url_for("list_customers", _external=True),
+            name="Customers REST API Service",
+            version="2.0",
+            status="OK",
         ),
         status.HTTP_200_OK,
     )
@@ -87,7 +86,7 @@ def update_customers(customers_id):
     """
     Update a Customers
 
-    This endpoint will update a Customers based the body that is posted
+    This endpoint will update a Customers based on the body that is posted
     """
     app.logger.info("Request to Update a customers with id [%s]", customers_id)
     check_content_type("application/json")
@@ -183,7 +182,7 @@ def get_customers(customer_id):
     """
     Retrieve a single Customer
 
-    This endpoint will return a Customer based on it's id
+    This endpoint will return a Customer based on its id
     """
     app.logger.info("Request to Retrieve a customer with id [%s]", customer_id)
 
