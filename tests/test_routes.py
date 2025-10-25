@@ -84,7 +84,10 @@ class TestCustomersService(TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
-        self.assertEqual(data["name"], "Customers Demo REST API Service")
+        self.assertEqual(data["name"], "Customers REST API Service")
+        self.assertEqual(data["version"], "2.0")
+        self.assertEqual(data["status"], "OK")
+        self.assertNotIn("paths", data)
 
     ######################################################################
     #  C R E A T E   C U S T O M E R   T E S T S
