@@ -21,7 +21,8 @@ This service implements a REST API that allows you to Create, Read, Update,
 and Delete Customers
 """
 
-from flask import jsonify, request, abort, current_app as app
+from flask import jsonify, request, abort, url_for
+from flask import current_app as app
 from service.models import Customers, DataValidationError
 from service.common import status  # HTTP Status Codes
 
@@ -33,11 +34,20 @@ from service.common import status  # HTTP Status Codes
 def index():
     """Root URL response with service metadata"""
     app.logger.info("Request for Root URL")
+
+    customers_url = url_for("list_customers")
+
     return (
         jsonify(
             name="Customers REST API Service",
             version="2.0",
             status="OK",
+            paths={
+                "List/Create Customers": customers_url,
+                "Read/Update/Delete Customer": f"{customers_url}/<customer_id>",
+                "Suspend Customer": f"{customers_url}/<customer_id>/suspend",
+                "Unsuspend Customer": f"{customers_url}/<customer_id>/unsuspend",
+            },
         ),
         status.HTTP_200_OK,
     )
@@ -48,13 +58,9 @@ def index():
 ######################################################################
 @app.route("/customers", methods=["POST"])
 def create_customer():
-    """
-    Creates a new Customer
-    POST /customers
-    """
+    """Creates a new Customer"""
     app.logger.info("Request to create a new Customer")
 
-    # Content-Type must be JSON
     if not request.is_json:
         abort(
             status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
@@ -83,23 +89,17 @@ def create_customer():
 ######################################################################
 @app.route("/customers/<uuid:customers_id>", methods=["PUT"])
 def update_customers(customers_id):
-    """
-    Update a Customers
-
-    This endpoint will update a Customers based on the body that is posted
-    """
-    app.logger.info("Request to Update a customers with id [%s]", customers_id)
+    """Update a Customer"""
+    app.logger.info("Request to Update a customer with id [%s]", customers_id)
     check_content_type("application/json")
 
-    # Attempt to find the Customers and abort if not found
     customers = Customers.find(customers_id)
     if not customers:
         abort(
             status.HTTP_404_NOT_FOUND,
-            f"Customers with id '{customers_id}' was not found.",
+            f"Customer with id '{customers_id}' was not found.",
         )
 
-    # Update the Customers with the new data
     data = request.get_json()
     app.logger.info("Processing: %s", data)
     try:
@@ -107,10 +107,8 @@ def update_customers(customers_id):
     except DataValidationError as e:
         abort(status.HTTP_400_BAD_REQUEST, f"{e}")
 
-    # Save the updates to the database
     customers.update()
-
-    app.logger.info("Customers with ID: %s updated.", customers.id)
+    app.logger.info("Customer with ID: %s updated.", customers.id)
     return jsonify(customers.serialize()), status.HTTP_200_OK
 
 
@@ -141,12 +139,10 @@ def list_customers():
     """Returns all of the customers (optionally filtered by multiple fields)"""
     app.logger.info("Request for customer list")
 
-    # Parse any arguments from the query string
     first_name = request.args.get("first_name")
     last_name = request.args.get("last_name")
     address = request.args.get("address")
 
-    # Build a dynamic query by adding filters for each parameter that exists
     query = Customers.query
     applied = []
 
@@ -160,8 +156,6 @@ def list_customers():
         query = query.filter(Customers.address.ilike(f"%{address}%"))
         applied.append(f"address={address}")
 
-    # If any filters were applied, execute the filtered query
-    # Otherwise, return all customers
     if applied:
         app.logger.info("Find with filters: %s", ", ".join(applied))
         customers = query.all()
@@ -179,14 +173,9 @@ def list_customers():
 ######################################################################
 @app.route("/customers/<uuid:customer_id>", methods=["GET"])
 def get_customers(customer_id):
-    """
-    Retrieve a single Customer
-
-    This endpoint will return a Customer based on its id
-    """
+    """Retrieve a single Customer by ID"""
     app.logger.info("Request to Retrieve a customer with id [%s]", customer_id)
 
-    # Attempt to find the Customer and abort if not found
     customer = Customers.find(customer_id)
     if not customer:
         abort(
@@ -205,17 +194,11 @@ def get_customers(customer_id):
 ######################################################################
 @app.route("/customers/<uuid:customer_id>", methods=["DELETE"])
 def delete_customers(customer_id):
-    """
-    Delete a Customer
-
-    This endpoint will delete a Customer based on the id specified in the path
-    """
+    """Delete a Customer by ID"""
     app.logger.info("Request to Delete a customer with id [%s]", customer_id)
 
     customer = Customers.find(customer_id)
-
     if customer:
-        # If the customer exists, perform delete
         app.logger.info("Customer with ID [%s] found for deletion.", customer.id)
         customer.delete()
 
