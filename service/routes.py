@@ -34,11 +34,18 @@ from service.common import status  # HTTP Status Codes
 def index():
     """Root URL response"""
     app.logger.info("Request for Root URL")
+    customers_url = url_for("list_customers", _external=False)
     return (
         jsonify(
-            name="Customers Demo REST API Service",
-            version="1.0",
-            paths=url_for("list_customers", _external=True),
+            name="Customers REST API Service",
+            version="2.0",
+            status="OK",
+            paths={
+                "List/Create Customers": customers_url,
+                "Read/Update/Delete Customer": f"{customers_url}/<customer_id>",
+                "Suspend Customer": f"{customers_url}/<customer_id>/suspend",
+                "Unsuspend Customer": f"{customers_url}/<customer_id>/unsuspend",
+            },
         ),
         status.HTTP_200_OK,
     )
