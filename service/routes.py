@@ -34,16 +34,17 @@ from service.common import status  # HTTP Status Codes
 def index():
     """Root URL response"""
     app.logger.info("Request for Root URL")
+    customers_url = url_for("list_customers", _external=False)
     return (
         jsonify(
             name="Customers REST API Service",
             version="2.0",
             status="OK",
             paths={
-                "List/Create Customers": "/customers",
-                "Read/Update/Delete Customer": "/customers/<customer_id>",
-                "Suspend Customer": "/customers/<customer_id>/suspend",
-                "Unsuspend Customer": "/customers/<customer_id>/unsuspend",
+                "List/Create Customers": customers_url,
+                "Read/Update/Delete Customer": f"{customers_url}/<customer_id>",
+                "Suspend Customer": f"{customers_url}/<customer_id>/suspend",
+                "Unsuspend Customer": f"{customers_url}/<customer_id>/unsuspend",
             },
         ),
         status.HTTP_200_OK,
@@ -234,7 +235,7 @@ def delete_customers(customer_id):
 # SUSPEND A CUSTOMER
 ######################################################################
 @app.route("/customers/<uuid:customer_id>/suspend", methods=["PUT"])
-def suspend_customer(customer_id):  # pragma: no cover
+def suspend_customer(customer_id):
     """
     Suspend a Customer
 
@@ -251,14 +252,14 @@ def suspend_customer(customer_id):  # pragma: no cover
 
     customer.suspend()
     app.logger.info("Customer with ID [%s] suspended.", customer_id)
-    return jsonify(customer.serialize()), status.HTTP_200_OK  # pragma: no cover
+    return jsonify(customer.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
 # UNSUSPEND A CUSTOMER
 ######################################################################
 @app.route("/customers/<uuid:customer_id>/unsuspend", methods=["PUT"])
-def unsuspend_customer(customer_id):  # pragma: no cover
+def unsuspend_customer(customer_id):
     """
     Unsuspend a Customer
 
@@ -275,4 +276,4 @@ def unsuspend_customer(customer_id):  # pragma: no cover
 
     customer.unsuspend()
     app.logger.info("Customer with ID [%s] unsuspended.", customer_id)
-    return jsonify(customer.serialize()), status.HTTP_200_OK  # pragma: no cover
+    return jsonify(customer.serialize()), status.HTTP_200_OK
