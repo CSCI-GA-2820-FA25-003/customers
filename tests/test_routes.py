@@ -85,20 +85,24 @@ class TestCustomersService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.get_json()
-        # Basic metadata
+        # check service metadata
         self.assertEqual(data["name"], "Customers REST API Service")
         self.assertEqual(data["version"], "2.0")
         self.assertEqual(data["status"], "OK")
 
-        # Paths dictionary must be present and correct
+        # check paths dictionary
+        self.assertIn("paths", data)
         self.assertIsInstance(data["paths"], dict)
-        expected_paths = {
-            "List/Create Customers": "/customers",
-            "Read/Update/Delete Customer": "/customers/<customer_id>",
-            "Suspend Customer": "/customers/<customer_id>/suspend",
-            "Unsuspend Customer": "/customers/<customer_id>/unsuspend",
-        }
-        self.assertEqual(data["paths"], expected_paths)
+
+        paths = data["paths"]
+        self.assertEqual(paths["List/Create Customers"], BASE_URL)
+        self.assertEqual(
+            paths["Read/Update/Delete Customer"], f"{BASE_URL}/<customer_id>"
+        )
+        self.assertEqual(paths["Suspend Customer"], f"{BASE_URL}/<customer_id>/suspend")
+        self.assertEqual(
+            paths["Unsuspend Customer"], f"{BASE_URL}/<customer_id>/unsuspend"
+        )
 
     ######################################################################
     #  C R E A T E   C U S T O M E R   T E S T S
@@ -486,3 +490,94 @@ class TestCustomersService(TestCase):
         """It should return 404 for an invalid ID format in the URL"""
         response = self.client.delete(f"{BASE_URL}/this-is-not-a-uuid")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    ######################################################################
+    #  S U S P E N D / U N S U S P E N D   C U S T O M E R   T E S T S
+    ######################################################################
+
+    def test_suspend_active_customer(self):
+        """It should Suspend an active customer"""
+        # Create a customer with suspended=False (default)
+        test_customer = self._create_customers_in_db(1)[0]
+        self.assertFalse(test_customer.suspended)
+
+        # Suspend the customer
+        response = self.client.put(f"{BASE_URL}/{test_customer.id}/suspend")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.get_json()
+        self.assertTrue(data["suspended"])
+
+        response = self.client.get(f"{BASE_URL}/{test_customer.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertTrue(data["suspended"])
+
+    def test_suspend_already_suspended_customer(self):
+        """It should handle suspending an already suspended customer"""
+        # Create and suspend a customer
+        test_customer = self._create_customers_in_db(1)[0]
+        test_customer.suspend()
+        self.assertTrue(test_customer.suspended)
+
+        # Suspend again
+        response = self.client.put(f"{BASE_URL}/{test_customer.id}/suspend")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Checking customer remains suspended
+        data = response.get_json()
+        self.assertTrue(data["suspended"])
+
+    def test_unsuspend_suspended_customer(self):
+        """It should Unsuspend a suspended customer"""
+        # Create and suspend a customer
+        test_customer = self._create_customers_in_db(1)[0]
+        test_customer.suspend()
+        self.assertTrue(test_customer.suspended)
+
+        # Unsuspend the customer
+        response = self.client.put(f"{BASE_URL}/{test_customer.id}/unsuspend")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.get_json()
+        self.assertFalse(data["suspended"])
+
+        response = self.client.get(f"{BASE_URL}/{test_customer.id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertFalse(data["suspended"])
+
+    def test_unsuspend_already_active_customer(self):
+        """It should handle unsuspending an already active customer"""
+        # Create a customer (default suspended=False)
+        test_customer = self._create_customers_in_db(1)[0]
+        self.assertFalse(test_customer.suspended)
+
+        # Unsuspend an already active customer
+        response = self.client.put(f"{BASE_URL}/{test_customer.id}/unsuspend")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.get_json()
+        self.assertFalse(data["suspended"])
+
+    def test_suspend_non_existent_customer(self):
+        """It should return 404 when suspending a non-existent customer"""
+
+        test_customer = CustomersFactory()
+        non_existent_id = test_customer.id
+
+        response = self.client.put(f"{BASE_URL}/{non_existent_id}/suspend")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        self.assertIn("was not found", data["message"])
+
+    def test_unsuspend_non_existent_customer(self):
+        """It should return 404 when unsuspending a non-existent customer"""
+
+        test_customer = CustomersFactory()
+        non_existent_id = test_customer.id
+
+        response = self.client.put(f"{BASE_URL}/{non_existent_id}/unsuspend")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        data = response.get_json()
+        self.assertIn("was not found", data["message"])
