@@ -80,11 +80,29 @@ class TestCustomersService(TestCase):
         return customers
 
     def test_index(self):
-        """It should call the home page"""
+        """It should call the home page and return service info"""
         response = self.client.get("/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         data = response.get_json()
-        self.assertEqual(data["name"], "Customers Demo REST API Service")
+        # check service metadata
+        self.assertEqual(data["name"], "Customers REST API Service")
+        self.assertEqual(data["version"], "2.0")
+        self.assertEqual(data["status"], "OK")
+
+        # check paths dictionary
+        self.assertIn("paths", data)
+        self.assertIsInstance(data["paths"], dict)
+
+        paths = data["paths"]
+        self.assertEqual(paths["List/Create Customers"], BASE_URL)
+        self.assertEqual(
+            paths["Read/Update/Delete Customer"], f"{BASE_URL}/<customer_id>"
+        )
+        self.assertEqual(paths["Suspend Customer"], f"{BASE_URL}/<customer_id>/suspend")
+        self.assertEqual(
+            paths["Unsuspend Customer"], f"{BASE_URL}/<customer_id>/unsuspend"
+        )
 
     ######################################################################
     #  C R E A T E   C U S T O M E R   T E S T S
