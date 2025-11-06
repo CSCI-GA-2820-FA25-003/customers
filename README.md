@@ -43,7 +43,7 @@ Steps:
 make cluster
 ```
 
-The above command will create a local k3d cluster with registry, 2 worker nodes  and load balancer.
+The above command will create a local k3d cluster with registry, 2 worker nodes  and load balancer. If the above command fails, you need to rebuild the container without the cache. You should clear the docker cache before rebuilding the container.
 
 To get information about the cluster use
 
