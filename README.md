@@ -30,9 +30,41 @@ Make sure you have installed:
 - [Remote - Containers Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
 Steps:
-1.Open the project folder in VS Code
-2.When prompted, click "Reopen in Container"
-3.VS Code will automatically build and start the dev container (this may take a few minutes the first time)
+
+1. Open the project folder in VS Code
+
+2. When prompted, click "Reopen in Container"
+
+3. VS Code will automatically build and start the dev container (this may take a few minutes the first time)
+
+##### Using Local k3d cluster inside in Dev Container
+
+```bash
+make cluster
+```
+
+The above command will create a local k3d cluster with registry, 2 worker nodes  and load balancer.
+
+To get information about the cluster use
+
+```bash
+kubectl cluster-info
+```
+
+Verify the kubernetes cluster and docker containers are running with the following commands
+
+```bash
+kubectl get service
+docker ps
+```
+
+![k3d local cluster](k3d_local_cluster.png)
+
+To remove the local kubernetes cluster use
+
+```bash
+make cluster-rm
+```
 
 #### 3 Run the Flask Application
 
