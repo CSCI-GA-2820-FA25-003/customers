@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: petshop
+  name: customers
   labels:
-    app: petshop
+    app: customers
 spec:
   replicas: 2
   strategy:
@@ -13,16 +13,16 @@ spec:
       maxUnavailable: 50%
   selector:
     matchLabels:
-      app: petshop
+      app: customers
   template:
     metadata:
       labels:
-        app: petshop
+        app: customers
     spec:
       restartPolicy: Always
       containers:
-      - name: petshop
-        image: cluster-registry:5000/petshop:1.0
+      - name: customers
+        image: cluster-registry:5000/customers:1.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080

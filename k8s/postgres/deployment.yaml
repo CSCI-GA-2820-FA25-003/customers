@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customers-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customers-db
+  template:
+    metadata:
+      labels:
+        app: customers-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: pgs3cr3t
+            - name: POSTGRES_DB
+              value: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customers-db
+spec:
+  selector:
+    app: customers-db
+  ports:
+    - port: 5432
+      targetPort: 5432
