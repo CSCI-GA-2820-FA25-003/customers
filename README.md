@@ -122,6 +122,26 @@ If this fails, run the following command
 sudo bash -c "echo '127.0.0.1    cluster-registry' >> /etc/hosts"
 ```
 
+3. Deploy the application to Kubernetes:
+
+After building and pushing the image, deploy the entire application (PostgreSQL database and customers microservice) to the K3s cluster:
+
+```bash
+make deploy
+```
+
+This command will apply all Kubernetes manifests recursively from the `k8s/` directory, including:
+- PostgreSQL StatefulSet, Service, PVC, and Secret (from `k8s/postgres/`)
+- Customers Deployment, Service, and Ingress (from `k8s/`)
+
+To verify the deployment was successful, check that all pods are running:
+
+```bash
+kubectl get pods
+```
+
+All pods should eventually reach the `Running` state.
+
 ### 4. Stopping and Deleting the Cluster
 
 When you are finished developing, you can fully clean up the cluster and all associated Docker containers and resources using the following command
