@@ -52,6 +52,16 @@ def index():
 
 
 ######################################################################
+# HEALTH CHECK
+######################################################################
+@app.route("/health", methods=["GET"])
+def health():
+    """Health check endpoint for Kubernetes liveness and readiness probes"""
+    app.logger.info("Request for health check")
+    return jsonify(status="OK"), status.HTTP_200_OK
+
+
+######################################################################
 # CREATE A CUSTOMER
 ######################################################################
 @app.route("/customers", methods=["POST"])

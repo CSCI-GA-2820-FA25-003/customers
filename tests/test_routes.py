@@ -105,6 +105,32 @@ class TestCustomersService(TestCase):
         )
 
     ######################################################################
+    #  H E A L T H   C H E C K   T E S T S
+    ######################################################################
+
+    def test_health_check(self):
+        """It should return health status with HTTP 200 OK"""
+        response = self.client.get("/health")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify response is JSON
+        self.assertEqual(response.content_type, "application/json")
+
+        # Verify response body
+        data = response.get_json()
+        self.assertIsNotNone(data)
+        self.assertIn("status", data)
+        self.assertEqual(data["status"], "OK")
+
+    def test_health_check_response_format(self):
+        """It should return exactly the expected JSON format"""
+        response = self.client.get("/health")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.get_json()
+        self.assertEqual(data, {"status": "OK"})
+
+    ######################################################################
     #  C R E A T E   C U S T O M E R   T E S T S
     ######################################################################
 
