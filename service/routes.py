@@ -5,7 +5,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# https://www.apache.org/licenses/LICENSE-2.0
+# https://w...content-available-to-author-only...e.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,10 +21,11 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete Customers
 """
 
-from flask import jsonify, request, url_for, abort
+from flask import jsonify, request, url_for, abort, send_from_directory
 from flask import current_app as app  # Import Flask application
 from service.models import Customers, DataValidationError
 from service.common import status  # HTTP Status Codes
+import os
 
 
 ######################################################################
@@ -32,23 +33,9 @@ from service.common import status  # HTTP Status Codes
 ######################################################################
 @app.route("/")
 def index():
-    """Root URL response"""
+    """Root URL response - serves the UI"""
     app.logger.info("Request for Root URL")
-    customers_url = url_for("list_customers", _external=False)
-    return (
-        jsonify(
-            name="Customers REST API Service",
-            version="2.0",
-            status="OK",
-            paths={
-                "List/Create Customers": customers_url,
-                "Read/Update/Delete Customer": f"{customers_url}/<customer_id>",
-                "Suspend Customer": f"{customers_url}/<customer_id>/suspend",
-                "Unsuspend Customer": f"{customers_url}/<customer_id>/unsuspend",
-            },
-        ),
-        status.HTTP_200_OK,
-    )
+    return send_from_directory(app.static_folder, "index.html")
 
 
 ######################################################################

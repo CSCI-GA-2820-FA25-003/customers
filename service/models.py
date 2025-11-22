@@ -165,6 +165,9 @@ class Customers(db.Model):
         self.first_name = cleaned["first_name"]
         self.last_name = cleaned["last_name"]
         self.address = cleaned["address"]
+        # Set suspended if provided, otherwise keep default (False)
+        if "suspended" in data:
+            self.suspended = bool(data["suspended"])
         return self
 
     def _extract_raw_fields(self, data: dict) -> dict:

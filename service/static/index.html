@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers Demo RESTful Service</title>
+    <link rel="stylesheet" href="https://m...content-available-to-author-only...n.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="jumbotron mt-4">
+            <h1 class="display-4">Customers Demo RESTful Service</h1>
+            <p class="lead">Manage your customers with this RESTful service</p>
+        </div>
+
+        <!-- Flash Message Area -->
+        <div id="flash_message" class="alert" style="display:none;"></div>
+
+        <!-- Customer Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Customer Information</h3>
+            </div>
+            <div class="card-body">
+                <form id="customer_form">
+                    <div class="form-group">
+                        <label for="customer_id">ID:</label>
+                        <input type="text" class="form-control" id="customer_id" placeholder="Enter Customer ID to Retrieve">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_first_name">First Name:</label>
+                        <input type="text" class="form-control" id="customer_first_name" placeholder="First Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_last_name">Last Name:</label>
+                        <input type="text" class="form-control" id="customer_last_name" placeholder="Last Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_address">Address:</label>
+                        <textarea class="form-control" id="customer_address" rows="3" placeholder="Address"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_suspended">Suspended:</label>
+                        <select class="form-control" id="customer_suspended">
+                            <option value="False">False</option>
+                            <option value="True">True</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="btn-toolbar mb-4" role="toolbar">
+            <div class="btn-group mr-2" role="group">
+                <button type="button" class="btn btn-primary" id="create-btn">Create</button>
+                <button type="button" class="btn btn-info" id="retrieve-btn">Retrieve</button>
+                <button type="button" class="btn btn-warning" id="update-btn">Update</button>
+                <button type="button" class="btn btn-danger" id="delete-btn">Delete</button>
+            </div>
+            <div class="btn-group mr-2" role="group">
+                <button type="button" class="btn btn-secondary" id="search-btn">Search</button>
+                <button type="button" class="btn btn-light" id="clear-btn">Clear</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-dark" id="suspend-btn">Suspend</button>
+                <button type="button" class="btn btn-success" id="unsuspend-btn">Unsuspend</button>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Search Results</h3>
+            </div>
+            <div class="card-body">
+                <div id="search_results" class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Address</th>
+                                <th>Suspended</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results_body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://c...content-available-to-author-only...y.com/jquery-3.5.1.min.js"></script>
+    <script src="https://c...content-available-to-author-only...r.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/js/rest_api.js"></script>
+</body>
+</html>
+
