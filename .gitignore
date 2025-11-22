@@ -59,6 +59,10 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
+.pytest_cache/
+
+# BDD test artifacts
+captures/
 
 # Translations
 *.mo
