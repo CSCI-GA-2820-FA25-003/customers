@@ -28,11 +28,17 @@
 				"makefile.extensionOutputFolder": "/tmp",
 				"makefile.configureOnOpen": false,
 				"python.testing.unittestEnabled": false,
-				"python.testing.pytestEnabled": true,			
-				"python.testing.pytestArgs": [
-					"tests"
-				],
-				"files.exclude": {
+			"python.testing.pytestEnabled": true,			
+			"python.testing.pytestArgs": [
+				"tests"
+			],
+			"cucumberautocomplete.steps": ["features/steps/*.py"],
+			"cucumberautocomplete.syncfeatures": "features/*.feature",
+			"cucumberautocomplete.strictGherkinCompletion": true,
+			"cucumberautocomplete.strictGherkinValidation": true,
+			"cucumberautocomplete.smartSnippets": true,
+			"cucumberautocomplete.gherkinDefinitionPart": "@(given|when|then)\\(",
+			"files.exclude": {
 					"**/.git": true,
 					"**/.DS_Store": true,
 					"**/*.pyc": true,
