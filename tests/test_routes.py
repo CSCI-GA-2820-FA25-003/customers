@@ -80,29 +80,17 @@ class TestCustomersService(TestCase):
         return customers
 
     def test_index(self):
-        """It should call the home page and return service info"""
+        """It should return the UI index page (HTML)"""
         response = self.client.get("/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        data = response.get_json()
-        # check service metadata
-        self.assertEqual(data["name"], "Customers REST API Service")
-        self.assertEqual(data["version"], "2.0")
-        self.assertEqual(data["status"], "OK")
-
-        # check paths dictionary
-        self.assertIn("paths", data)
-        self.assertIsInstance(data["paths"], dict)
-
-        paths = data["paths"]
-        self.assertEqual(paths["List/Create Customers"], BASE_URL)
-        self.assertEqual(
-            paths["Read/Update/Delete Customer"], f"{BASE_URL}/<customer_id>"
-        )
-        self.assertEqual(paths["Suspend Customer"], f"{BASE_URL}/<customer_id>/suspend")
-        self.assertEqual(
-            paths["Unsuspend Customer"], f"{BASE_URL}/<customer_id>/unsuspend"
-        )
+        # The root now serves a static HTML page for the UI
+        # Verify we received HTML and that the page contains the expected title
+        self.assertTrue(response.content_type.startswith("text/html"))
+        html = response.get_data(as_text=True)
+        self.assertIn("Customers Demo RESTful Service", html)
+        # Ensure the client-side script is referenced
+        self.assertIn("static/js/rest_api.js", html)
 
     ######################################################################
     #  H E A L T H   C H E C K   T E S T S
