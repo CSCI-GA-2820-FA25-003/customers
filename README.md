@@ -90,6 +90,30 @@ The interface is organized into three main areas:
 
   ![Search Results](docs/images/results.png)
 
+### Example Scenario: Creating a Customer
+
+Here is a step-by-step guide to creating a new customer record:
+
+1.  **Fill out the Form:**
+    Enter the customer's details (First Name, Last Name, Address) into the **Customer Information** section. Leave the **ID** field empty, as the database will generate this automatically.
+    
+    *(Example: Creating user "Andy Zhang")*
+    
+    ![Fill out form](docs/images/create_fill.png)
+
+2.  **Submit and Verify:**
+    Click the Blue **Create** button. 
+    * A green **Success** banner will appear at the top of the page.
+    * The system will assign a unique UUID to the new customer, which will automatically populate the **ID** field.
+    
+    ![Creation Success](docs/images/create_success.png)
+
+3.  **Error Handling:**
+    If you attempt to create a customer without providing all required fields (e.g., leaving the **Address** empty), the system will reject the request.
+    * A red banner will display the error message from the API (e.g., `400 Bad Request: address must be non-empty`).
+    
+    ![Error State](docs/images/create_error.png)
+
 ## Local Kubernetes Development Environment (K3d)
 
 We use **K3d** to run a lightweight Kubernetes cluster, **`nyu-devops`**, inside Docker containers for local development and testing.
