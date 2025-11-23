@@ -130,6 +130,28 @@ To retrieve a full list of all customers in the database without any filtering:
     
     ![List All Results](docs/images/list_results.png)
 
+### Example Scenario: Reading Customer Details
+
+To retrieve the full details of a specific customer using their unique ID:
+
+1.  **Enter Customer ID:**
+    Paste the unique Customer UUID into the **ID** field of the **Customer Information** form. You can leave the other fields (Name, Address) empty.
+    
+    ![ID Input](docs/images/read_id_input.png)
+
+2.  **Retrieve Data:**
+    Click the Teal **Retrieve** button.
+    * The system will fetch the customer's record from the database.
+    * The **First Name**, **Last Name**, **Address**, and **Suspended** status fields will automatically populate with the customer's data.
+    * A green **Success** banner will confirm the action.
+    
+    ![Retrieve Success](docs/images/read_success.png)
+
+3.  **Error Handling:**
+    If you enter an ID that does not exist in the database, the system will return a **404 Not Found** error, displayed in a red banner at the top.
+    
+    ![404 Error](docs/images/read_error.png)
+
 ## Local Kubernetes Development Environment (K3d)
 
 We use **K3d** to run a lightweight Kubernetes cluster, **`nyu-devops`**, inside Docker containers for local development and testing.
