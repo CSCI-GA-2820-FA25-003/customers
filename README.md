@@ -114,6 +114,22 @@ Here is a step-by-step guide to creating a new customer record:
     
     ![Error State](docs/images/create_error.png)
 
+### Example Scenario: Listing All Customers
+
+To retrieve a full list of all customers in the database without any filtering:
+
+1.  **Ensure Criteria is Empty:**
+    Make sure the **Customer Information** form is completely blank. You can click the **Clear** button (light gray) to ensure no existing filters are applied.
+    
+    ![Empty Form](docs/images/list_empty_form.png)
+
+2.  **Execute Search:**
+    Click the Gray **Search** button.
+    * Because no specific criteria (Name, Address, etc.) were provided, the system interprets this as a request to "List All".
+    * The **Search Results** table will populate with every customer record currently in the database.
+    
+    ![List All Results](docs/images/list_results.png)
+
 ## Local Kubernetes Development Environment (K3d)
 
 We use **K3d** to run a lightweight Kubernetes cluster, **`nyu-devops`**, inside Docker containers for local development and testing.
