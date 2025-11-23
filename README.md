@@ -9,8 +9,8 @@
 
 ## Overview
 
-This project is a **Flask-based RESTful API** for managing customer data in an e-commerce application.  
-It allows clients to **create, read, update, delete (CRUD) and list** customer records and supports filtering by first name, last name, and address.
+This project is a **Flask-based RESTful API with an Admin UI** for managing customer data in an e-commerce application.  
+It allows clients to **create, read, update, delete (CRUD) and list** customer records via a REST API or a simple web interface. It supports filtering by first name, last name, and address.
 
 ## Getting Started
 
@@ -49,6 +49,46 @@ If successful, the server should start at:
 ```
 http://localhost:8080/
 ```
+
+#### 4 Using the Web Interface
+
+The service includes an interactive HTML front-end to manage customer data and test the API endpoints directly from your browser.
+
+Once the application is running:
+
+1.  Open your browser and navigate to:
+    ```
+    http://localhost:8080/
+    ```
+2.  You will see the **Customers Demo RESTful Service** page.
+
+The interface is organized into three main areas:
+
+* **Customer Information Form (Top):**
+  Use these fields to input data for creating new customers or to specify criteria for searching.
+  
+  ![Customer Information Form](docs/images/form.png)
+
+    * **ID:** Enter a specific Customer ID here for `Retrieve`, `Update`, or `Delete` actions.
+    * **Fields:** Fill in First Name, Last Name, Address, and Suspended status for creation or filtering.
+
+* **Action Buttons (Middle):**
+  Use these color-coded buttons to trigger specific API calls based on the information in the form.
+
+  ![Action Buttons](docs/images/buttons.png)
+
+    * `Create` (Blue): Adds a new customer.
+    * `Retrieve` (Teal): Fetches a single customer by the entered ID.
+    * `Update` (Yellow): Modifies an existing customer based on ID.
+    * `Delete` (Red): Removes the customer with the entered ID.
+    * `Search` (Gray): Finds all customers matching the filled-in criteria.
+    * `Clear` (Light Gray): Resets the form fields.
+    * `Suspend` / `Unsuspend`: Quickly changes the suspended status of a targeted customer.
+
+* **Search Results (Bottom):**
+  The results of your operations (successful creations, search listings, etc.) will appear in this dynamic table.
+
+  ![Search Results](docs/images/results.png)
 
 ## Local Kubernetes Development Environment (K3d)
 
@@ -245,23 +285,31 @@ curl -X GET "http://localhost:8080/customers?first_name=<FIRST_NAME>&last_name=<
 dot-env-example     - copy to .env to use environment variables
 pyproject.toml      - Poetry list of Python libraries required by your code
 
-service/                   - service python package
-├── __init__.py            - package initializer
-├── config.py              - configuration parameters
-├── models.py              - module with business models
-├── routes.py              - module with service routes
-└── common                 - common code package
-    ├── cli_commands.py    - Flask command to recreate all tables
-    ├── error_handlers.py  - HTTP error handling code
-    ├── log_handlers.py    - logging setup code
-    └── status.py          - HTTP status constants
-
-tests/                     - test cases package
-├── __init__.py            - package initializer
-├── factories.py           - Factory for testing with fake objects
-├── test_cli_commands.py   - test suite for the CLI
-├── test_models.py         - test suite for business models
-└── test_routes.py         - test suite for service routes
+.
+├── Dockerfile          - Dockerfile for building the image
+├── Makefile            - Makefile with build targets
+├── Procfile            - Procfile for honcho to start the service
+├── README.md           - This file
+├── features/           - (NEW) BDD Acceptance Tests
+│   ├── customers.feature  - Gherkin feature file
+│   ├── environment.py     - Selenium setup
+│   └── steps/             - BDD steps definitions
+├── k8s/                - Kubernetes deployment files
+├── service/            - Service python package
+│   ├── __init__.py     - Package initializer
+│   ├── config.py       - Configuration parameters
+│   ├── models.py       - Business models
+│   ├── routes.py       - Service routes
+│   ├── common/         - Common code package
+│   └── static/         - (NEW) Web UI Static Assets
+│       ├── css/        - Stylesheets
+│       ├── index.html  - Main UI page
+│       └── js/         - JavaScript for REST API interaction
+├── tests/              - Unit tests package
+│   ├── factories.py    - Factory for testing with fake objects
+│   ├── test_models.py  - Test suite for business models
+│   └── test_routes.py  - Test suite for service routes
+└── wsgi.py             - WSGI entry point
 ```
 
 ## License
