@@ -111,8 +111,44 @@ Here is a step-by-step guide to creating a new customer record:
 3.  **Error Handling:**
     If you attempt to create a customer without providing all required fields (e.g., leaving the **Address** empty), the system will reject the request.
     * A red banner will display the error message from the API (e.g., `400 Bad Request: address must be non-empty`).
-    
+
     ![Error State](docs/images/create_error.png)
+
+### Example Scenario: Updating a Customer (Story #47)
+
+To update an existing customer using the Web UI:
+
+1. Open the application in your browser:  
+   `http://localhost:8080/`
+2. Locate the customer you want to modify in the table at the bottom.
+3. Click the **"Retrieve"** button after entering the customer's **ID**, or directly click the **"Edit"** button if available.
+4. The customer form will automatically populate with the current values.
+5. Modify any fields you want to update (e.g., First Name, Last Name, Address).
+6. Click the **"Update"** (yellow) button.
+
+If the update is successful:
+- A confirmation message will appear.
+- The updated values will display in the results table.
+- A `PUT /customers/<id>` API call is made to update the customer in the database.
+
+This feature allows administrators to easily modify existing customer records through the UI.
+
+### Example Scenario: Deleting a Customer (Story #48)
+
+To delete an existing customer using the Web UI:
+
+1. Open the browser at:  
+   `http://localhost:8080/`
+2. In the **Customer Information** section, enter the **ID** of the customer you want to delete.
+3. Click the **"Delete"** (red) button.
+4. You may be asked to confirm the deletion.
+
+After deleting:
+- The customer will be removed from the results table.
+- A `DELETE /customers/<id>` API call is made.
+- The customer is permanently removed from the database.
+
+This feature allows administrators to remove outdated or invalid customer records.
 
 ## Local Kubernetes Development Environment (K3d)
 
