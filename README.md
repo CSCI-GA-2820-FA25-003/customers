@@ -152,6 +152,56 @@ To retrieve the full details of a specific customer using their unique ID:
     
     ![404 Error](docs/images/read_error.png)
 
+### Example Scenario: Filtering Customers by Single Field
+
+To retrieve the full details of customers using his first name/last name/address:
+
+1.  **Enter Customer First Name/Last Name/Address:**
+    Type the Customer First Name/Last Name/Address into the **First Name/Last Name/Address** field of the **Customer Information** form. You can leave the other fields empty.
+    
+    ![ID Input](docs/images/read_firstname_input.jpg)
+
+2.  **Search Data:**
+    Click the Teal **Search** button.
+    * The system will fetch the customer's record from the database.
+    * All the customer results with the First Name/Last Name/Address you type in will show in th Search Results area.
+    * A green **Success** banner will confirm the action.
+    
+    ![First Name Results](docs/images/firstname_result.jpg)
+
+### Example Scenario: Filtering Customers by Multiple Fields
+
+To retrieve the full details of customers using the combination of First Name, Last Name, Address:
+
+1.  **Enter Customer Last Name and Address:**
+    Type the Customer Last Name and Address into the **Last Name and Address** fields of the **Customer Information** form. You can leave the other fields empty.
+    
+    ![Last Name and Address Input](docs/images/read_lastname_address_input.jpg)
+
+2.  **Search Data:**
+    Click the Teal **Search** button.
+    * The system will fetch the customer's record from the database.
+    * All the customer results with the Last Name and Address you type in will show in th Search Results area.
+    * A green **Success** banner will confirm the action.
+    
+    ![Last Name and Address Results](docs/images/lastname_address_result.jpg)
+
+### Example Scenario: Suspending/Unsuspending a Customer
+
+To suspend/unsuspend a customer:
+
+1.  **Find the Customer You Want to Suspend/Unsuspend:**
+    See Reading Customer Details or Filtering Customers. After finding the customer you want to suspend/unsuspend, click the Edit button. The **First Name**, **Last Name**, **Address**, and **Suspended** status fields will automatically populate with the customer's data. Then click the Suspend/Unsuspend button.
+    
+    ![Edit A Customer](docs/images/edit_customer.jpg)
+    ![Suspend A Customer](docs/images/suspend_customer.jpg)
+
+2.  **See Result:**
+    Click the Teal **Search** button.
+    * The Suspended status field will change to True/False as you suspend/unsuspend him.
+    * A green **Success** banner will confirm the action.
+    ![Suspending Result](docs/images/suspend_result.jpg)
+
 ## Local Kubernetes Development Environment (K3d)
 
 We use **K3d** to run a lightweight Kubernetes cluster, **`nyu-devops`**, inside Docker containers for local development and testing.
