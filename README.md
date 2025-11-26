@@ -121,17 +121,19 @@ To update an existing customer using the Web UI:
 1. Open the application in your browser:  
    `http://localhost:8080/`
 2. Locate the customer you want to modify in the table at the bottom.
-3. Click the **"Retrieve"** button after entering the customer's **ID**, or directly click the **"Edit"** button if available.
-4. The customer form will automatically populate with the current values.
-5. Modify any fields you want to update (e.g., First Name, Last Name, Address).
-6. Click the **"Update"** (yellow) button.
+3. Click the **Retrieve** button after entering the customer's **ID**,  
+   or directly click the **Edit** button if available.
+4. The form will automatically populate with the customer's current values.
+5. Modify any fields you wish to update (e.g., First Name, Last Name, Address).
+6. Click the **Update** (yellow) button.
 
-If the update is successful:
+**After updating:**
+
 - A confirmation message will appear.
 - The updated values will display in the results table.
-- A `PUT /customers/<id>` API call is made to update the customer in the database.
+- A `PUT /customers/<id>` API call is executed to update the record in the database.
 
-This feature allows administrators to easily modify existing customer records through the UI.
+---
 
 ### Example Scenario: Deleting a Customer (Story #48)
 
@@ -140,15 +142,70 @@ To delete an existing customer using the Web UI:
 1. Open the browser at:  
    `http://localhost:8080/`
 2. In the **Customer Information** section, enter the **ID** of the customer you want to delete.
-3. Click the **"Delete"** (red) button.
+3. Click the **Delete** (red) button.
 4. You may be asked to confirm the deletion.
 
-After deleting:
+**After deleting:**
+
 - The customer will be removed from the results table.
-- A `DELETE /customers/<id>` API call is made.
+- A `DELETE /customers/<id>` API call is executed.
 - The customer is permanently removed from the database.
 
-This feature allows administrators to remove outdated or invalid customer records.
+---
+
+### Example Scenario: Listing All Customers
+
+To retrieve every customer from the database:
+
+1. Clear all fields in the **Customer Information** section (use **Clear** button).
+2. Click the **Search** (gray) button.
+
+All customer records will appear in the **Search Results** table.
+
+---
+
+### Example Scenario: Reading Customer Details
+
+To retrieve details of a single customer by ID:
+
+1. Enter the customer’s **ID** in the **Customer Information** form.
+2. Click the **Retrieve** (teal) button.
+3. The customer details populate automatically in the form.
+
+If the ID does not exist, a **404 Not Found** error is displayed.
+
+---
+
+### Example Scenario: Filtering Customers by Single Field
+
+You may filter customers using **First Name**, **Last Name**, or **Address**:
+
+1. Enter one of the fields.
+2. Click **Search**.
+3. Matching customers will appear in the results table.
+
+---
+
+### Example Scenario: Filtering Customers by Multiple Fields
+
+To filter using a combination of fields (e.g., Last Name + Address):
+
+1. Enter multiple values (e.g., Last Name + Address).
+2. Click **Search**.
+3. Only customers matching all fields are returned.
+
+---
+
+### Example Scenario: Suspending / Unsuspending a Customer
+
+To suspend or unsuspend a customer:
+
+1. Retrieve or search for the customer.
+2. Click **Edit** to load the customer's data into the form.
+3. Click the **Suspend** or **Unsuspend** button.
+4. Click **Search** to verify the updated status in the results table.
+
+
 
 ## Local Kubernetes Development Environment (K3d)
 
