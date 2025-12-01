@@ -50,7 +50,7 @@ def health():
 ######################################################################
 # CREATE A CUSTOMER
 ######################################################################
-@app.route("/customers", methods=["POST"])
+@app.route("/api/customers", methods=["POST"])
 def create_customer():
     """
     Creates a new Customer
@@ -85,7 +85,7 @@ def create_customer():
 ######################################################################
 # UPDATE A CUSTOMER
 ######################################################################
-@app.route("/customers/<uuid:customers_id>", methods=["PUT"])
+@app.route("/api/customers/<uuid:customers_id>", methods=["PUT"])
 def update_customers(customers_id):
     """
     Update a Customers
@@ -140,7 +140,7 @@ def check_content_type(content_type) -> None:
 ######################################################################
 # LIST ALL CUSTOMERS
 ######################################################################
-@app.route("/customers", methods=["GET"])
+@app.route("/api/customers", methods=["GET"])
 def list_customers():
     """Returns all of the customers (optionally filtered by multiple fields)"""
     app.logger.info("Request for customer list")
@@ -181,7 +181,7 @@ def list_customers():
 ######################################################################
 # READ A CUSTOMER
 ######################################################################
-@app.route("/customers/<uuid:customer_id>", methods=["GET"])
+@app.route("/api/customers/<uuid:customer_id>", methods=["GET"])
 def get_customers(customer_id):
     """
     Retrieve a single Customer
@@ -207,7 +207,7 @@ def get_customers(customer_id):
 ######################################################################
 # DELETE A CUSTOMER
 ######################################################################
-@app.route("/customers/<uuid:customer_id>", methods=["DELETE"])
+@app.route("/api/customers/<uuid:customer_id>", methods=["DELETE"])
 def delete_customers(customer_id):
     """
     Delete a Customer
@@ -230,7 +230,7 @@ def delete_customers(customer_id):
 ######################################################################
 # SUSPEND A CUSTOMER
 ######################################################################
-@app.route("/customers/<uuid:customer_id>/suspend", methods=["PUT"])
+@app.route("/api/customers/<uuid:customer_id>/suspend", methods=["PUT"])
 def suspend_customer(customer_id):
     """
     Suspend a Customer
@@ -254,7 +254,7 @@ def suspend_customer(customer_id):
 ######################################################################
 # UNSUSPEND A CUSTOMER
 ######################################################################
-@app.route("/customers/<uuid:customer_id>/unsuspend", methods=["PUT"])
+@app.route("/api/customers/<uuid:customer_id>/unsuspend", methods=["PUT"])
 def unsuspend_customer(customer_id):
     """
     Unsuspend a Customer
