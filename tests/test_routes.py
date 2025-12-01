@@ -31,7 +31,7 @@ from tests.factories import CustomersFactory
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
-BASE_URL = "/customers"
+BASE_URL = "/api/customers"
 
 
 ######################################################################
@@ -129,7 +129,7 @@ class TestCustomersService(TestCase):
             "last_name": "Doe",
             "address": "123 Main Street",
         }
-        resp = self.client.post("/customers", json=payload)
+        resp = self.client.post(BASE_URL, json=payload)
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         data = resp.get_json()
         self.assertEqual(data["first_name"], "John")
@@ -141,19 +141,19 @@ class TestCustomersService(TestCase):
     def test_create_customer_missing_fields(self):
         """It should return 400 if required fields are missing"""
         payload = {"first_name": "John"}  # missing last_name, address
-        resp = self.client.post("/customers", json=payload)
+        resp = self.client.post(BASE_URL, json=payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_customer_blank_fields(self):
         """It should return 400 if fields are blank strings"""
-        payload = {"first_name": " ", "last_name": "Doe", "address": " "}
-        resp = self.client.post("/customers", json=payload)
+        payload = {"first_name": " ", "last_name": " ", "address": " "}
+        resp = self.client.post(BASE_URL, json=payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_customer_invalid_json(self):
         """It should return 415 if content-type is not application/json"""
         resp = self.client.post(
-            "/customers", data="not-json", content_type="text/plain"
+            BASE_URL, data="not-json", content_type="text/plain"
         )
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
