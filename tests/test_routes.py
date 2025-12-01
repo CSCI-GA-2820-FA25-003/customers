@@ -152,9 +152,7 @@ class TestCustomersService(TestCase):
 
     def test_create_customer_invalid_json(self):
         """It should return 415 if content-type is not application/json"""
-        resp = self.client.post(
-            BASE_URL, data="not-json", content_type="text/plain"
-        )
+        resp = self.client.post(BASE_URL, data="not-json", content_type="text/plain")
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     ######################################################################
@@ -276,6 +274,16 @@ class TestCustomersService(TestCase):
             content_type="application/json; charset=utf-8",  # JSON with charset
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_update_customer_invalid_id(self):
+        """It should return 404 for an invalid ID format when updating"""
+        payload = {
+            "first_name": "John",
+            "last_name": "Doe",
+            "address": "123 Main Street",
+        }
+        response = self.client.put(f"{BASE_URL}/this-is-not-a-uuid", json=payload)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
     #  L I S T   C U S T O M E R   T E S T S
@@ -595,3 +603,13 @@ class TestCustomersService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         data = response.get_json()
         self.assertIn("was not found", data["message"])
+
+    def test_suspend_customer_invalid_id(self):
+        """It should return 404 for an invalid ID format when suspending"""
+        response = self.client.put(f"{BASE_URL}/this-is-not-a-uuid/suspend")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_unsuspend_customer_invalid_id(self):
+        """It should return 404 for an invalid ID format when unsuspending"""
+        response = self.client.put(f"{BASE_URL}/this-is-not-a-uuid/unsuspend")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
