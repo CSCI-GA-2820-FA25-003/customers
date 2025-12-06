@@ -333,6 +333,21 @@ status:
               type: Succeeded
           duration: 15s
           reason: Succeeded
+      # - name: pylint
+      # TODO: Replace pylint part and KEEP THE REST OF COMMENTS
+
+      # - name: pytest
+      # TODO: Replace pylint part and KEEP THE REST OF COMMENTS
+
+      # - name: buildah
+      # TODO: Replace pylint part and KEEP THE REST OF COMMENTS
+
+      # - name: deploy-image
+      # TODO: Replace pylint part and KEEP THE REST OF COMMENTS
+
+      # - name: behave
+      # TODO: Replace pylint part and KEEP THE REST OF COMMENTS
+      
     workspaces:
       - name: pipeline-workspace
   provenance:
