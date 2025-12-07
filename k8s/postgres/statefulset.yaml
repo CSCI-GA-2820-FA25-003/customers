@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:16
+          image: postgres:15-alpine
           imagePullPolicy: IfNotPresent
           ports:
             - name: pg
@@ -36,6 +36,8 @@ spec:
                 secretKeyRef:
                   name: pg-credentials
                   key: dbname
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           readinessProbe:
             exec:
               command: ["sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB -h 127.0.0.1 -p 5432"]
@@ -47,9 +49,9 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 10
           volumeMounts:
-            - name: data
+            - name: postgres-storage
               mountPath: /var/lib/postgresql/data
       volumes:
-        - name: data
+        - name: postgres-storage
           persistentVolumeClaim:
-            claimName: pg-data
+            claimName: postgres-pvc

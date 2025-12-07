@@ -100,7 +100,22 @@ spec:
       workspaces:
         - name: source
           workspace: pipeline-workspace
-    # - name: pytest
+    - name: pytest
+      params:
+        - name: pytest-args
+          value: []
+        - name: secret-name
+          value: pg-credentials
+        - name: secret-key
+          value: url
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: Task
+        name: pytest-env
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
     # - name: buildah
     # - name: deploy-image
   workspaces:
