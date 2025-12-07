@@ -72,7 +72,9 @@ def step_impl(context: Any, text_string: str) -> None:
 @when('I set the "{element_name}" to "{text_string}"')
 def step_impl(context: Any, element_name: str, text_string: str) -> None:
     element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
-    element = context.driver.find_element(By.ID, element_id)
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
     element.clear()
     element.send_keys(text_string)
 
@@ -80,22 +82,28 @@ def step_impl(context: Any, element_name: str, text_string: str) -> None:
 @when('I select "{text}" in the "{element_name}" dropdown')
 def step_impl(context: Any, text: str, element_name: str) -> None:
     element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
-    element = Select(context.driver.find_element(By.ID, element_id))
-    element.select_by_visible_text(text)
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    Select(element).select_by_visible_text(text)
 
 
 @then('I should see "{text}" in the "{element_name}" dropdown')
 def step_impl(context: Any, text: str, element_name: str) -> None:
     element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
-    element = Select(context.driver.find_element(By.ID, element_id))
-    actual_text = element.first_selected_option.text
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    actual_text = Select(element).first_selected_option.text
     assert actual_text == text, f"Expected '{text}' but got '{actual_text}' in dropdown"
 
 
 @then('the "{element_name}" field should be empty')
 def step_impl(context: Any, element_name: str) -> None:
     element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
-    element = context.driver.find_element(By.ID, element_id)
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
     assert element.get_attribute("value") == ""
 
 
@@ -137,7 +145,10 @@ def step_impl(context: Any, element_name: str) -> None:
 @when('I press the "{button}" button')
 def step_impl(context: Any, button: str) -> None:
     button_id = button.lower().replace(" ", "_") + "-btn"
-    context.driver.find_element(By.ID, button_id).click()
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.element_to_be_clickable((By.ID, button_id))
+    )
+    element.click()
 
 
 @then('I should see "{name}" in the results')
