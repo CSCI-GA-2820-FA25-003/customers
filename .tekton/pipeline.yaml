@@ -16,7 +16,7 @@ spec:
       name: APP_NAME
       type: string
     - default: 'image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(params.APP_NAME):latest'
-      description: he name of the image to build
+      description: The name of the image to build
       name: IMAGE_NAME
       type: string
   tasks:
@@ -99,6 +99,20 @@ spec:
         - name: source
           workspace: pipeline-workspace
     # - name: buildah
-    # - name: deploy-image
+    - name: deploy-image
+      params:
+        - name: image-name
+          value: $(params.IMAGE_NAME)
+        - name: manifest-dir
+          value: k8s
+      runAfter:
+        - buildah
+      taskRef:
+        kind: Task
+        name: deploy-image
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+    # - name: behave
   workspaces:
     - name: pipeline-workspace
