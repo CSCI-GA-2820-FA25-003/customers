@@ -211,10 +211,10 @@ class CustomerResource(Resource):
             customer.deserialize(data)
             customer.id = customer_id
             customer.update()
-        except DataValidationError:
+        except DataValidationError as e:
             abort(
                 status.HTTP_400_BAD_REQUEST,
-                "Bad data, validation error occured",
+                str(e),
             )
         return customer.serialize(), status.HTTP_200_OK
 
@@ -312,10 +312,10 @@ class CustomerCollection(Resource):
         try:
             customer.deserialize(api.payload)
             customer.create()
-        except DataValidationError:
+        except DataValidationError as e:
             abort(
                 status.HTTP_400_BAD_REQUEST,
-                "Bad data, validation error occured",
+                str(e),
             )
         app.logger.info("Customer with new id [%s] created!", customer.id)
         location_url = api.url_for(
