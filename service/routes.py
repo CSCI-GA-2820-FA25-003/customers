@@ -33,7 +33,7 @@ PUT /customers/{id}/unsuspend - unsuspends a Customer account
 import uuid
 from flask import current_app as app  # Import Flask application
 from flask_restx import Api, Resource, fields, reqparse
-from service.models import Customers
+from service.models import Customers, DataValidationError
 from service.common import status  # HTTP Status Codes
 
 ######################################################################
@@ -207,9 +207,15 @@ class CustomerResource(Resource):
             )
         app.logger.debug("Payload = %s", api.payload)
         data = api.payload
-        customer.deserialize(data)
-        customer.id = customer_id
-        customer.update()
+        try:
+            customer.deserialize(data)
+            customer.id = customer_id
+            customer.update()
+        except DataValidationError as e:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                str(e),
+            )
         return customer.serialize(), status.HTTP_200_OK
 
     # ------------------------------------------------------------------
@@ -303,8 +309,14 @@ class CustomerCollection(Resource):
         app.logger.info("Request to Create a Customer")
         customer = Customers()
         app.logger.debug("Payload = %s", api.payload)
-        customer.deserialize(api.payload)
-        customer.create()
+        try:
+            customer.deserialize(api.payload)
+            customer.create()
+        except DataValidationError as e:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                str(e),
+            )
         app.logger.info("Customer with new id [%s] created!", customer.id)
         location_url = api.url_for(
             CustomerResource, customer_id=customer.id, _external=True
